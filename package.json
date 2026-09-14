@@ -1,12 +1,13 @@
 {
-  "name": "scaffold-tmp",
+  "name": "argus-dashboard",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "mock-backend": "node scripts/mock-backend.js"
   },
   "dependencies": {
     "next": "16.3.5",
