@@ -47,7 +47,7 @@ export function EventDetailPanel({
         <Row label="Time" value={formatTimestamp(event.ts)} />
         <Row label="Confidence" value={`${event.confidence}%`} />
         <Row label="Status" value={event.status} />
-        <Row label="Confirmed" value={event.confirmed ? "yes" : "no"} />
+        <Row label="Confirmed unusual"value={event.confirmed ? "yes" : "no"} />
       </dl>
 
       {/* Keyed on event.id so the correcting/error state resets cleanly
@@ -113,14 +113,14 @@ function EventActions({
               disabled={submitting}
               className="flex-1 rounded bg-accent py-2 font-mono text-xs font-semibold tracking-[0.2em] text-background uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              Confirm
+              Confirm unusual
             </button>
             <button
               onClick={() => setCorrecting(true)}
               disabled={submitting}
               className="flex-1 rounded border border-border py-2 font-mono text-xs tracking-[0.2em] text-muted uppercase transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
             >
-              Correct
+              Label
             </button>
           </div>
         ) : (
@@ -129,7 +129,7 @@ function EventActions({
               autoFocus
               value={correctedLabel}
               onChange={(e) => setCorrectedLabel(e.target.value)}
-              placeholder="Corrected label"
+              placeholder="What is it? e.g. person, delivery, cat"
               className="w-full rounded border border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
             />
             <div className="flex gap-2">

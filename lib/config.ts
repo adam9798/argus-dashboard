@@ -7,8 +7,6 @@ export const WS_EVENTS_URL =
   process.env.NEXT_PUBLIC_WS_EVENTS_URL ??
   API_BASE_URL.replace(/^http/, "ws") + "/ws/events";
 
-export const AUTH_COOKIE_NAME = "argus_session";
-
 // Deliberately NOT tied to NODE_ENV. ARGUS is a LAN-only home device —
 // a production build served over plain http:// on the home network is
 // the expected deployment, not an edge case. Browsers drop `Secure`

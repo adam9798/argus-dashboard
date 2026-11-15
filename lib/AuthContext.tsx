@@ -17,9 +17,9 @@ export interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
-// The JWT itself never lives in this context, or anywhere in client
-// JS — it's an HttpOnly cookie set by /api/auth/login. This context
-// only tracks whether a valid session exists, as reported by the
+// The dashboard session is an HttpOnly cookie set by /api/auth/login,
+// and node tokens stay on the server (lib/nodeAuth.ts). This context
+// only tracks whether a dashboard session exists, as reported by the
 // server-side /api/auth/session route.
 export const AuthContext = createContext<AuthContextValue | undefined>(
   undefined,
