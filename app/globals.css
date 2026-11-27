@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0d10;
-  --surface: #10151a;
-  --surface-raised: #141a20;
-  --border: #232b32;
-  --foreground: #e4e9ec;
-  --muted: #6b7680;
-  --accent: #2dd4bf;
-  --accent-dim: #164e47;
+  --background: #070b14;
+  --surface: #0d1422;
+  --surface-raised: #121b2e;
+  --border: #1f2c45;
+  --foreground: #e6ecf7;
+  --muted: #7385a3;
+  --accent: #4f8cff;
+  --accent-dim: #1b3566;
   --danger: #f0555a;
 
   /* Chart series, validated for colorblind separation on --surface. Node
@@ -17,8 +17,8 @@
   --series-2: #d95926;
   --series-3: #199e70;
   --series-4: #c98500;
-  --chart-grid: #232b32;
-  --chart-axis: #39434c;
+  --chart-grid: #1f2c45;
+  --chart-axis: #34456a;
 }
 
 @theme inline {

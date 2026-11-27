@@ -18,6 +18,10 @@ export async function fetchNodes(): Promise<NodesResponse | null> {
   }
 }
 
+const NODES_REFRESH_MS = 10_000;
+/** Dispatched on window to make every node list re-read at once. */
+export const NODES_CHANGED_EVENT = "argus:nodes-changed";
+
 export function useNodes() {
   const [data, setData] = useState<NodesResponse | null>(null);
   const [switching, setSwitching] = useState(false);
@@ -25,13 +29,25 @@ export function useNodes() {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchNodes().then((result) => {
-      if (cancelled) return;
-      setData(result);
-      setLoaded(true);
-    });
+    // Re-read now and then: discovery can move a node to a new address or add
+    // one. Unchanged answers keep the old object, so sockets stay open.
+    const load = () =>
+      fetchNodes().then((result) => {
+        if (cancelled) return;
+        if (result) {
+          setData((current) =>
+            JSON.stringify(current) === JSON.stringify(result) ? current : result,
+          );
+        }
+        setLoaded(true);
+      });
+    void load();
+    const timer = setInterval(() => void load(), NODES_REFRESH_MS);
+    window.addEventListener(NODES_CHANGED_EVENT, load);
     return () => {
       cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener(NODES_CHANGED_EVENT, load);
     };
   }, []);
 

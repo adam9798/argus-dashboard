@@ -1,10 +1,13 @@
 import { API_BASE_URL } from "@/lib/config";
+import { readDiscovered } from "@/lib/discovery/store";
 
-// The ARGUS cameras this dashboard can show.
+// The ARGUS cameras this dashboard can show. Server-side values: client code
+// may only import types from this file.
 //
-// ARGUS_NODES is read server-side only, so the proxy can only ever reach
-// a node listed here -- the node picked in the browser is an id into this
-// list, never a URL, which keeps /api/argus from becoming an open relay:
+// The list comes from ARGUS_NODES and from network discovery, so the proxy
+// can only ever reach a node in it -- the node picked in the browser is an id
+// into this list, never a URL, which keeps /api/argus from becoming an open
+// relay:
 //
 //   ARGUS_NODES="Node A=http://10.0.0.140:8000,Node B=http://10.0.0.128:8000"
 //
@@ -31,6 +34,16 @@ function slug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+/** The id a node of this name gets, e.g. "Node A" -> "node-a". */
+export function nodeId(name: string): string {
+  return slug(name);
+}
+
+/**
+ * ARGUS_NODES, with each address replaced by where network discovery last
+ * found a node of that name. Discovered nodes that ARGUS_NODES does not list
+ * are added, so the variable is optional.
+ */
 export function configuredNodes(): NodeConfig[] {
   const raw = process.env.ARGUS_NODES?.trim();
   const nodes: NodeConfig[] = [];
@@ -44,6 +57,15 @@ export function configuredNodes(): NodeConfig[] {
     let id = slug(name) || `node-${nodes.length + 1}`;
     while (nodes.some((node) => node.id === id)) id += "-2";
     nodes.push({ id, name, baseUrl });
+  }
+
+  const discovered = [...readDiscovered()].sort((a, b) => a.name.localeCompare(b.name));
+  for (const found of discovered) {
+    const id = slug(found.name);
+    if (!id) continue;
+    const listed = nodes.find((node) => node.id === id);
+    if (listed) listed.baseUrl = found.baseUrl;
+    else nodes.push({ id, name: found.name, baseUrl: found.baseUrl });
   }
 
   return nodes.length > 0

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { useNodes } from "@/hooks/useNodes";
+import { NODES_CHANGED_EVENT, useNodes } from "@/hooks/useNodes";
+import { FindNodes } from "@/components/FindNodes";
 import { DashboardNav } from "@/components/DashboardNav";
 import { NodePanel } from "@/components/NodePanel";
 import { StagingPanel } from "@/components/swipe/StagingPanel";
+import { AlertDelivery } from "@/components/AlertDelivery";
 
 // Every configured node on one screen. The single-node pages (live,
 // alerts, thermal) still follow the node picker; this one ignores it.
@@ -56,6 +58,12 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
+        <AlertDelivery />
+        <div className="mb-6">
+          <FindNodes
+            onFound={() => window.dispatchEvent(new Event(NODES_CHANGED_EVENT))}
+          />
+        </div>
         <StagingPanel nodes={nodes} />
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] items-start gap-4">
           {nodes.map((node) => (

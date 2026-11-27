@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { StatusDot } from "@/components/StatusDot";
 import { NodeSwitcher } from "@/components/NodeSwitcher";
+import { FindNodes } from "@/components/FindNodes";
+import { NODES_CHANGED_EVENT } from "@/hooks/useNodes";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -60,6 +62,13 @@ export default function LoginPage() {
               </span>
               <div className="mt-2">
                 <NodeSwitcher />
+              </div>
+              {/* A new network can leave the saved addresses wrong, which
+                  would otherwise block sign-in. */}
+              <div className="mt-3">
+                <FindNodes
+                  onFound={() => window.dispatchEvent(new Event(NODES_CHANGED_EVENT))}
+                />
               </div>
             </div>
 
