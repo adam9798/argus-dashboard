@@ -81,7 +81,7 @@ export function AlertDelivery() {
           : "Connected";
 
   return (
-    <section className="mb-6 rounded border border-border bg-surface p-4">
+    <section className="card rise mb-4 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="font-mono text-xs tracking-[0.25em] text-muted uppercase">

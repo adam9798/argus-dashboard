@@ -45,7 +45,7 @@ export default function LivePage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-1 flex-col px-6 py-6">
-      <DashboardNav title="Live feed" alertCount={alertCount} />
+      <DashboardNav title="Live feed" alertCount={alertCount} pickNode />
 
       <div className="mb-6 flex flex-wrap items-start gap-3">
         <div className="min-w-[240px] flex-1">

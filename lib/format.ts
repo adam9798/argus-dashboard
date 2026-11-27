@@ -14,6 +14,14 @@ export function formatTimeShort(ts: string): string {
   return new Date(ts).toLocaleTimeString(undefined, { hour12: false });
 }
 
+/** The time, with the date in front when it was not today. */
+export function formatWhen(ts: string): string {
+  const at = new Date(ts);
+  if (at.toDateString() === new Date().toDateString()) return formatTimeShort(ts);
+  const day = at.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return `${day}, ${formatTimeShort(ts)}`;
+}
+
 /** A node timestamp, in seconds since the epoch. */
 export function formatEpoch(seconds: number): string {
   return new Date(seconds * 1000).toLocaleString(undefined, {

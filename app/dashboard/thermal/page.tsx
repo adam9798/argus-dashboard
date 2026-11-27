@@ -179,7 +179,7 @@ export default function ThermalPage() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-1 flex-col px-6 py-6">
-      <DashboardNav title="Thermal" />
+      <DashboardNav title="Thermal" pickNode />
 
       {error && (
         <div className="mb-6 rounded border border-danger/30 bg-danger/10 px-4 py-3 font-mono text-xs text-danger">

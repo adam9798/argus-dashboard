@@ -30,32 +30,32 @@ export function LiveFeed({
     setAttempt((n) => n + 1);
   }
 
+  const badge = (
+    <span className="flex items-center gap-2 text-xs text-muted">
+      <StatusDot
+        tone={state === "streaming" ? "live" : state === "error" ? "down" : "idle"}
+        pulse={state === "streaming"}
+      />
+      {state === "streaming" ? "Live" : state === "error" ? "No signal" : "Opening…"}
+    </span>
+  );
+
   return (
-    <div
-      className={
-        compact
-          ? "flex flex-col"
-          : "flex flex-col rounded border border-border bg-surface"
-      }
-    >
-      <div
-        className={`flex items-center justify-between border-b border-border px-4 ${
-          compact ? "py-2" : "py-3"
-        }`}
-      >
-        <p className="font-mono text-[11px] tracking-widest text-muted uppercase">
-          Live camera
-        </p>
-        <span className="flex items-center gap-2 font-mono text-[11px] text-muted uppercase">
-          <StatusDot
-            tone={state === "streaming" ? "live" : state === "error" ? "down" : "idle"}
-            pulse={state === "streaming"}
-          />
-          {state === "streaming" ? "streaming" : state === "error" ? "no signal" : "opening…"}
-        </span>
-      </div>
+    <div className={compact ? "flex flex-col" : "card flex flex-col overflow-hidden"}>
+      {!compact && (
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <p className="text-sm text-muted">Live camera</p>
+          {badge}
+        </div>
+      )}
 
       <div className="relative bg-black">
+        {/* In a panel the state sits on the picture, so the picture is bigger. */}
+        {compact && (
+          <span className="absolute top-3 left-3 z-10 rounded-full bg-black/60 px-3 py-1.5 backdrop-blur">
+            {badge}
+          </span>
+        )}
         <div className={`aspect-video w-full ${compact ? "max-h-[42vh]" : ""}`}>
           {state !== "error" && (
             <img

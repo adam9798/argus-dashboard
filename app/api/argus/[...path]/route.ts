@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import type { NodeConfig } from "@/lib/nodes";
 import { findNode, sessionCookieName } from "@/lib/nodeSessions";
 import { selectedNode } from "@/lib/selectedNode";
+import { answers } from "@/lib/discovery/scan";
 
 // Server-side proxy to the ARGUS nodes' API.
 //
@@ -135,7 +136,13 @@ export async function GET(
   if (!node) return unknownNode();
 
   const token = await bearer(node);
-  if (!token) return unauthorized();
+  if (!token) {
+    // Asking for a password only makes sense when the node is there: a node
+    // that is switched off should read as offline, not as signed out.
+    return (await answers(node.baseUrl))
+      ? unauthorized()
+      : unreachable(node.name, node.baseUrl);
+  }
 
   const query = upstreamQuery(request);
 

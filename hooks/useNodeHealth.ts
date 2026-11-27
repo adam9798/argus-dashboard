@@ -55,7 +55,9 @@ export function useNodeHealth(nodeId: string) {
         statusResult.reason instanceof ApiError &&
         statusResult.reason.status === 401
       ) {
-        stop();
+        // Keep polling: a node that goes away while its sign-in form is
+        // showing should turn into "offline".
+        failures = 0;
         setStatus(null);
         setThermal(null);
         setState("signin");
@@ -64,7 +66,9 @@ export function useNodeHealth(nodeId: string) {
         failures += 1;
         const down = failures >= OFFLINE_AFTER_FAILURES;
         setState((current) =>
-          current === "online" && !down ? current : "offline",
+          (current === "online" || current === "signin") && !down
+            ? current
+            : "offline",
         );
       }
 

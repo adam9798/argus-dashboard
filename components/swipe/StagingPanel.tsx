@@ -18,7 +18,14 @@ function clock(seconds: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function StagingPanel({ nodes }: { nodes: NodeOption[] }) {
+export function StagingPanel({
+  nodes,
+  onActiveChange,
+}: {
+  nodes: NodeOption[];
+  /** Told whether any node is staging right now. */
+  onActiveChange?: (active: boolean) => void;
+}) {
   const [sessions, setSessions] = useState<StagingSession[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<Record<string, string>>({});
@@ -46,6 +53,11 @@ export function StagingPanel({ nodes }: { nodes: NodeOption[] }) {
     (nodeId: string) => sessions.find((s) => s.node === nodeId && s.stop === null) ?? null,
     [sessions],
   );
+
+  const anyOpen = sessions.some((s) => s.stop === null);
+  useEffect(() => {
+    onActiveChange?.(anyOpen);
+  }, [anyOpen, onActiveChange]);
 
   const runApply = useCallback(async (session: StagingSession) => {
     if (applying.current.has(session.id)) return;
@@ -113,14 +125,11 @@ export function StagingPanel({ nodes }: { nodes: NodeOption[] }) {
   };
 
   return (
-    <section className="mb-6 rounded border border-border bg-surface p-4">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-mono text-xs tracking-[0.25em] text-muted uppercase">Staging mode</h2>
-        <p className="text-xs text-muted">
-          Act out suspicious behaviour while it is on: every event the node records is labelled
-          anomaly (provenance: staged). Auto-stops after 30 min.
-        </p>
-      </div>
+    <section>
+      <p className="mb-3 text-sm text-muted">
+        Act out suspicious behaviour while it is on: every event the node records is labelled
+        anomaly (provenance: staged). Auto-stops after 30 min.
+      </p>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-3">
         {nodes.map((node) => {
           const session = open(node.id);

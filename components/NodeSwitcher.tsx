@@ -12,7 +12,7 @@ export function NodeSwitcher() {
   if (nodes.length === 0) return null;
 
   const base =
-    "rounded border border-border bg-surface px-3 py-2 font-mono text-xs tracking-[0.2em] uppercase";
+    "min-h-11 rounded-full border border-border bg-surface px-4 py-2 text-sm";
 
   if (nodes.length === 1) {
     return <span className={`${base} text-muted`}>{nodes[0].name}</span>;

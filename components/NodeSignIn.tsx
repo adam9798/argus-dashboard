@@ -3,9 +3,8 @@
 import { useState, type FormEvent } from "react";
 
 const INPUT =
-  "mt-1 w-full rounded border border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent";
-const LABEL =
-  "block font-mono text-[11px] tracking-wider text-muted uppercase";
+  "mt-1 min-h-11 w-full rounded-xl border border-border bg-surface-raised px-3 py-2 text-sm text-foreground outline-none focus:border-accent";
+const LABEL = "block text-xs text-muted";
 
 /**
  * Sign in to one node from its own panel. The password goes to this node
@@ -53,7 +52,7 @@ export function NodeSignIn({
       onSubmit={handleSubmit}
       className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 p-6"
     >
-      <p className="font-mono text-xs tracking-widest text-muted uppercase">
+      <p className="text-sm text-foreground">
         Sign in to {nodeName}
       </p>
 
@@ -88,7 +87,7 @@ export function NodeSignIn({
       </div>
 
       {error && (
-        <p className="rounded border border-danger/30 bg-danger/10 px-3 py-2 font-mono text-xs text-danger">
+        <p className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
           {error}
         </p>
       )}
@@ -96,7 +95,7 @@ export function NodeSignIn({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded bg-accent py-2 font-mono text-xs font-semibold tracking-[0.2em] text-background uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="min-h-11 w-full rounded-full bg-accent py-2 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {submitting ? "Authenticating…" : "Authenticate"}
       </button>

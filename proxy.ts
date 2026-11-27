@@ -14,6 +14,7 @@ const MULTI_NODE_PAGES = new Set([
   "/dashboard/swipe",
   "/dashboard/label",
   "/dashboard/federated",
+  "/dashboard/settings",
 ]);
 
 export function proxy(request: NextRequest) {

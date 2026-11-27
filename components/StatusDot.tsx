@@ -1,5 +1,5 @@
 const TONE_CLASSES = {
-  live: "bg-accent shadow-[0_0_8px_var(--accent)]",
+  live: "bg-success shadow-[0_0_8px_var(--success)]",
   idle: "bg-muted",
   down: "bg-danger shadow-[0_0_8px_var(--danger)]",
 } as const;

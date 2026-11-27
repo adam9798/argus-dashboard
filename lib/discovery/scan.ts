@@ -64,6 +64,31 @@ export async function probe(
   }
 }
 
+const ANSWER_TIMEOUT_MS = 2500;
+const ANSWER_CACHE_MS = 3000;
+const recent = new Map<string, { at: number; result: Promise<boolean> }>();
+
+/**
+ * Whether anything answers at this address. Any HTTP reply counts, including
+ * a refusal. Cached briefly, since a panel asks for several things at once.
+ */
+export function answers(baseUrl: string): Promise<boolean> {
+  const cached = recent.get(baseUrl);
+  if (cached && Date.now() - cached.at < ANSWER_CACHE_MS) return cached.result;
+  const result = fetch(`${baseUrl}/api/status`, {
+    signal: AbortSignal.timeout(ANSWER_TIMEOUT_MS),
+    cache: "no-store",
+  }).then(
+    async (res) => {
+      await res.body?.cancel();
+      return true;
+    },
+    () => false,
+  );
+  recent.set(baseUrl, { at: Date.now(), result });
+  return result;
+}
+
 export async function scanNetwork(ports: number[]): Promise<FoundNode[]> {
   const targets: string[] = [];
   for (const prefix of localSubnets()) {

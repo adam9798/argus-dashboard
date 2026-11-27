@@ -15,6 +15,8 @@ const thisComputer = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: [...thisComputer, "*.local"],
+  // Hides the round development badge. Compile and runtime errors still show.
+  devIndicators: false,
 };
 
 export default nextConfig;

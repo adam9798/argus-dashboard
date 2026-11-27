@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { DetectionEvent, LabelPayload } from "@/lib/api";
 import type { NodeOption } from "@/lib/nodes";
 import { tempColor } from "@/lib/format";
@@ -12,14 +13,27 @@ import { FeedModeBadge } from "./FeedModeBadge";
 import { LiveFeed } from "./LiveFeed";
 import { NodeSignIn } from "./NodeSignIn";
 import { StatusDot } from "./StatusDot";
-import { Metric } from "./StatusStrip";
 
 const STATE_COPY: Record<NodeState, string> = {
-  connecting: "connecting…",
-  online: "online",
-  offline: "offline",
-  signin: "sign-in needed",
+  connecting: "Connecting…",
+  online: "Online",
+  offline: "Offline",
+  signin: "Sign-in needed",
 };
+
+/** What the overview's summary needs to know about one node. */
+export interface NodeReport {
+  state: NodeState;
+  fps: number | null;
+  temp: number | null;
+  softLimit: number;
+}
+
+interface Reporting {
+  onHealth: (nodeId: string, report: NodeReport | null) => void;
+  /** Null when the panel has no feed, e.g. before sign-in. */
+  onEvents: (nodeId: string, events: DetectionEvent[] | null) => void;
+}
 
 /**
  * Everything the console shows about one node. Each panel fetches, polls
@@ -28,36 +42,39 @@ const STATE_COPY: Record<NodeState, string> = {
  */
 export function NodePanel({
   node,
-  onAlertCount,
-}: {
-  node: NodeOption;
-  onAlertCount: (nodeId: string, count: number) => void;
-}) {
+  delay = 0,
+  onHealth,
+  onEvents,
+}: { node: NodeOption; delay?: number } & Reporting) {
   const health = useNodeHealth(node.id);
   const { state, status, thermal } = health;
   const reportedName = status?.node;
 
+  const temp = thermal?.current?.soc_temp_c ?? null;
+  const soft = thermal?.limits_c.soft ?? 80;
+  const throttled = (thermal?.throttled.now.length ?? 0) > 0;
+  const fps = status?.fps ?? null;
+
+  useEffect(() => {
+    onHealth(node.id, { state, fps, temp, softLimit: soft });
+  }, [node.id, state, fps, temp, soft, onHealth]);
+  useEffect(() => () => onHealth(node.id, null), [node.id, onHealth]);
+
   const header = (right?: ReactNode) => (
-    <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
         <StatusDot
           tone={state === "online" ? "live" : state === "offline" ? "down" : "idle"}
           pulse={state === "online"}
         />
-        <h2 className="truncate text-sm font-medium text-foreground">{node.name}</h2>
+        <h2 className="truncate text-base font-medium text-foreground">{node.name}</h2>
         {/* The node's own idea of its name labels its events below. */}
         {reportedName && reportedName !== node.name && (
-          <span className="truncate font-mono text-[11px] text-muted">
-            reports as {reportedName}
-          </span>
+          <span className="truncate text-xs text-muted">reports as {reportedName}</span>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <span
-          className={`font-mono text-[11px] tracking-widest uppercase ${
-            state === "offline" ? "text-danger" : "text-muted"
-          }`}
-        >
+        <span className={`text-xs ${state === "offline" ? "text-danger" : "text-muted"}`}>
           {STATE_COPY[state]}
         </span>
         {right}
@@ -65,50 +82,39 @@ export function NodePanel({
     </div>
   );
 
-  const temp = thermal?.current?.soc_temp_c ?? null;
-  const soft = thermal?.limits_c.soft ?? 80;
-  const throttled = (thermal?.throttled.now.length ?? 0) > 0;
-
   const metrics = (
-    <div
-      className={`grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-4 py-3 sm:grid-cols-4 ${
-        state === "offline" ? "opacity-50" : ""
-      }`}
-    >
-      <Metric label="FPS" value={status ? String(status.fps) : "—"} />
-      <Metric label="Accelerator" value={status?.accelerator ?? "—"} />
-      <Metric label="Model" value={status?.model_version ?? "—"} />
-      <Metric
+    <dl className="grid grid-cols-2 gap-px border-y border-border bg-border sm:grid-cols-[repeat(4,auto)]">
+      <Reading label="FPS" value={status ? String(status.fps) : "–"} />
+      <Reading label="Accelerator" value={status?.accelerator ?? "–"} />
+      <Reading label="Model" value={status?.model_version ?? "–"} />
+      <Reading
         label="SoC temp"
-        value={temp === null ? "—" : `${temp.toFixed(1)}°C${throttled ? " ⚠" : ""}`}
+        value={temp === null ? "–" : `${temp.toFixed(1)}°C${throttled ? " ⚠" : ""}`}
         color={tempColor(temp, soft)}
       />
-    </div>
+    </dl>
   );
 
   return (
     <section
       aria-label={node.name}
-      className={`flex min-w-0 flex-col rounded border bg-surface ${
-        state === "offline" ? "border-danger/40" : "border-border"
+      className={`card rise flex min-w-0 flex-col overflow-hidden ${
+        state === "offline" ? "border-danger/35" : ""
       }`}
+      // No reordering by state: each camera keeps its place on the screen.
+      style={{ animationDelay: `${delay}ms` }}
     >
       {state === "signin" ? (
         <>
           {header()}
-          <NodeSignIn
-            nodeId={node.id}
-            nodeName={node.name}
-            onSignedIn={health.recheck}
-          />
+          <NodeSignIn nodeId={node.id} nodeName={node.name} onSignedIn={health.recheck} />
         </>
       ) : state === "connecting" ? (
         <>
           {header()}
-          <div className="flex flex-1 items-center justify-center p-12">
-            <p className="font-mono text-xs tracking-widest text-muted uppercase">
-              Connecting to {node.name}…
-            </p>
+          <div className="px-4 pb-4">
+            <div className="skeleton aspect-video w-full" />
+            <p className="sr-only">Connecting to {node.name}…</p>
           </div>
         </>
       ) : (
@@ -117,10 +123,24 @@ export function NodePanel({
           online={state === "online"}
           header={header}
           metrics={metrics}
-          onAlertCount={onAlertCount}
+          onEvents={onEvents}
         />
       )}
     </section>
+  );
+}
+
+function Reading({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="min-w-0 bg-surface px-3 py-2.5">
+      <dt className="text-[11px] text-muted">{label}</dt>
+      <dd
+        className="truncate font-mono text-sm text-foreground tabular-nums"
+        style={color ? { color } : undefined}
+      >
+        {value}
+      </dd>
+    </div>
   );
 }
 
@@ -130,28 +150,23 @@ function NodeContent({
   online,
   header,
   metrics,
-  onAlertCount,
+  onEvents,
 }: {
   node: NodeOption;
   online: boolean;
   header: (right?: ReactNode) => ReactNode;
   metrics: ReactNode;
-  onAlertCount: (nodeId: string, count: number) => void;
+  onEvents: Reporting["onEvents"];
 }) {
   const { events, mode, error, applyLabel } = useEventFeed(node);
   // Held whole, not by id: the event must stay open if a burst of newer
   // ones pushes it out of the feed while it is being read.
   const [selected, setSelected] = useState<DetectionEvent | null>(null);
 
-  const alertCount = events.filter(
-    (event) => event.status === "stranger" && !event.confirmed,
-  ).length;
-
   useEffect(() => {
-    onAlertCount(node.id, alertCount);
-  }, [node.id, alertCount, onAlertCount]);
-
-  useEffect(() => () => onAlertCount(node.id, 0), [node.id, onAlertCount]);
+    onEvents(node.id, events);
+  }, [node.id, events, onEvents]);
+  useEffect(() => () => onEvents(node.id, null), [node.id, onEvents]);
 
   const close = useCallback(() => setSelected(null), []);
 
@@ -167,41 +182,46 @@ function NodeContent({
   return (
     <>
       {header(<FeedModeBadge mode={mode} />)}
-      {metrics}
 
       {online ? (
-        <LiveFeed nodeId={node.id} compact />
+        <>
+          <LiveFeed nodeId={node.id} compact />
+          {metrics}
+        </>
       ) : (
-        <div className="flex aspect-video max-h-[42vh] w-full items-center justify-center bg-black">
-          <p className="font-mono text-xs tracking-widest text-danger uppercase">
-            Node offline
-          </p>
-        </div>
+        <p className="border-t border-border px-4 py-4 text-sm text-muted">
+          Not answering. Check that it is powered and on this network.
+        </p>
       )}
 
       {online && error && (
-        <p className="border-t border-border px-4 py-2 font-mono text-[11px] text-danger">
+        <p className="border-b border-border px-4 py-2 text-xs text-danger">
           Events unavailable: {error}
         </p>
       )}
 
-      <div className="h-48 border-t border-border">
-        <EventList
-          events={events.slice(0, 8)}
-          selectedId={current?.id ?? null}
-          onSelect={select}
-          bare
-        />
-      </div>
-
-      {current && (
-        <EventDetailOverlay
-          event={current}
-          nodeName={node.name}
-          onClose={close}
-          onLabel={applyLabel}
-        />
+      {/* A node that dropped keeps what it had already reported. */}
+      {(online || events.length > 0) && (
+        <div className="h-56">
+          <EventList
+            events={events.slice(0, 8)}
+            selectedId={current?.id ?? null}
+            onSelect={select}
+            bare
+          />
+        </div>
       )}
+
+      {current &&
+        createPortal(
+          <EventDetailOverlay
+            event={current}
+            nodeName={node.name}
+            onClose={close}
+            onLabel={applyLabel}
+          />,
+          document.body,
+        )}
     </>
   );
 }
@@ -245,13 +265,13 @@ function EventDetailOverlay({
       onClick={(clickEvent) => {
         if (clickEvent.target === clickEvent.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 p-4"
     >
-      <div className="flex max-h-full w-full max-w-md flex-col gap-3 overflow-y-auto">
+      <div className="sheet-in flex max-h-full w-full max-w-md flex-col gap-3 overflow-y-auto">
         <button
           ref={backRef}
           onClick={onClose}
-          className="rounded border border-border bg-surface px-4 py-3 text-center font-mono text-[11px] tracking-[0.2em] text-foreground uppercase transition-colors hover:border-accent"
+          className="card min-h-12 px-4 py-3 text-center text-sm text-foreground transition-colors hover:border-accent"
         >
           ← Back to live view
         </button>

@@ -17,7 +17,7 @@ export function FeedModeBadge({ mode }: { mode: FeedMode }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded border px-2.5 py-1.5 font-mono text-[11px] tracking-widest uppercase ${
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs first-letter:uppercase ${
         mode === "offline"
           ? "border-danger/40 bg-danger/5 text-danger"
           : "border-border bg-surface text-muted"
