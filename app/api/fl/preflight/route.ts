@@ -16,7 +16,7 @@ import {
   type SamplesResponse,
   type SampleStats,
 } from "@/lib/fl/types";
-import { isSessionCookie } from "@/lib/nodeSessions";
+import { hasAnySession } from "@/lib/session";
 import { configuredNodes, type NodeConfig } from "@/lib/nodes";
 
 // Pre-flight for a federated round: reads real state, starts nothing.
@@ -338,8 +338,7 @@ function evaluate(
 }
 
 export async function GET() {
-  const jar = await cookies();
-  if (!jar.getAll().some((cookie) => isSessionCookie(cookie.name))) {
+  if (!hasAnySession(await cookies())) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 

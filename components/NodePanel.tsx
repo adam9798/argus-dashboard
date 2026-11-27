@@ -185,7 +185,7 @@ function NodeContent({
 
       {online ? (
         <>
-          <LiveFeed nodeId={node.id} compact />
+          <LiveFeed nodeId={node.id} nodeName={node.name} />
           {metrics}
         </>
       ) : (

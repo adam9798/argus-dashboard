@@ -60,7 +60,7 @@ const HOLD_MS = 6_000;
 const MIN_VIEW_MS = 350;
 
 const BUTTON =
-  "rounded border border-border px-3 py-2 font-mono text-xs tracking-[0.1em] text-muted uppercase transition-colors hover:border-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-full border border-border px-3 py-2  text-xs  text-muted first-letter:uppercase transition-colors hover:border-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40";
 const TOGGLE_ON = "bg-surface-raised text-foreground";
 const TOGGLE_OFF = "text-muted hover:text-foreground";
 
@@ -669,7 +669,7 @@ export function LabelWorkspace({
   // --- Render ---------------------------------------------------------
   if (phase === "signin") {
     return (
-      <div className="rounded border border-border bg-surface">
+      <div className="card">
         <NodeSignIn
           nodeId={nodeId}
           nodeName={nodeName}
@@ -684,7 +684,7 @@ export function LabelWorkspace({
 
   if (phase === "loading") {
     return (
-      <p className="rounded border border-border bg-surface p-10 text-center font-mono text-xs tracking-widest text-muted uppercase">
+      <p className="card p-10 text-center text-xs text-muted first-letter:uppercase">
         Reading {nodeName}…
       </p>
     );
@@ -692,7 +692,7 @@ export function LabelWorkspace({
 
   if (phase === "error") {
     return (
-      <div className="rounded border border-danger/30 bg-danger/10 p-6 font-mono text-xs text-danger">
+      <div className="rounded-xl border border-danger/30 bg-danger/10 p-6 text-xs text-danger">
         <p>{loadError}</p>
         <button
           type="button"
@@ -723,13 +723,13 @@ export function LabelWorkspace({
       />
 
       {halted && (
-        <div className="rounded border border-danger/40 bg-danger/10 px-4 py-3 font-mono text-xs text-danger">
+        <div className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-xs text-danger">
           {halted}
         </div>
       )}
 
       {failures.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded border border-danger/40 bg-danger/10 px-4 py-3 font-mono text-xs text-danger">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-xs text-danger">
           {failures.length} label{failures.length === 1 ? "" : "s"} did not reach the node.
           <button type="button" onClick={retryFailures} className={BUTTON}>
             Retry
@@ -738,12 +738,12 @@ export function LabelWorkspace({
       )}
 
       {message && (
-        <p role="status" className="font-mono text-xs text-accent">
+        <p role="status" className="text-xs text-accent">
           {message}
         </p>
       )}
       {pending.length > 0 && (
-        <p role="status" className="font-mono text-[11px] text-muted">
+        <p role="status" className="text-xs text-muted">
           Saving {pending.length} to {nodeName} in a few seconds. Press U to undo.
         </p>
       )}
@@ -751,7 +751,7 @@ export function LabelWorkspace({
       {view === "bulk" ? (
         <BulkGrid items={bulkItems} nodeId={nodeId} onConfirm={confirmBulk} />
       ) : !current ? (
-        <p className="rounded border border-border bg-surface p-10 text-center font-mono text-xs text-muted">
+        <p className="card p-10 text-center text-xs text-muted">
           {order === "review"
             ? "Nothing to review. Generate suggestions to fill this queue."
             : order === "likely"
@@ -759,7 +759,7 @@ export function LabelWorkspace({
               : "Queue is empty. Refresh to pick up new events."}
         </p>
       ) : (
-        <section className="grid gap-4 rounded border border-border bg-surface p-4 lg:grid-cols-[1fr_300px]">
+        <section className="grid gap-4 card p-4 lg:grid-cols-[1fr_300px]">
           <div>
             <SnapshotImage
               key={current.n}
@@ -774,15 +774,15 @@ export function LabelWorkspace({
             />
           </div>
 
-          <div className="flex flex-col gap-3 font-mono text-xs">
-            <p className="text-[11px] text-muted">
+          <div className="flex flex-col gap-3 text-xs">
+            <p className="text-xs text-muted">
               Goes to{" "}
               <span className="text-foreground">
                 {heldBack ? "the test set, on this console" : `${nodeName} training data`}
               </span>
             </p>
             {relabel && (
-              <p className="rounded border border-danger/30 bg-danger/10 p-2 text-[11px] text-danger">
+              <p className="rounded-xl border border-danger/30 bg-danger/10 p-2 text-xs text-danger">
                 Saved as {relabel.label ?? "a label"}. Changing it overwrites the
                 node&apos;s copy.
               </p>
@@ -809,7 +809,7 @@ export function LabelWorkspace({
 
             {shown && (
               <div
-                className={`rounded border p-2 text-[11px] ${
+                className={`rounded-xl border p-2 text-xs ${
                   shown.label === "anomaly"
                     ? "border-danger/40 bg-danger/10"
                     : "border-accent/40 bg-surface-raised"
@@ -839,7 +839,7 @@ export function LabelWorkspace({
                   type="button"
                   disabled={!canLabel}
                   onClick={acceptSuggestion}
-                  className="mt-2 w-full rounded border border-accent py-2 font-semibold tracking-[0.1em] text-foreground uppercase disabled:opacity-40"
+                  className="mt-2 w-full rounded-xl border border-accent py-2 font-semibold text-foreground first-letter:uppercase disabled:opacity-40"
                 >
                   Accept (Enter)
                 </button>
@@ -847,7 +847,7 @@ export function LabelWorkspace({
             )}
 
             {hint && hint.reasons.length > 0 && (
-              <ul className="rounded border border-border bg-surface-raised p-2 text-[11px] text-foreground">
+              <ul className="rounded-xl border border-border bg-surface-raised p-2 text-xs text-foreground">
                 {hint.reasons.map((reason) => (
                   <li key={reason}>{reason}</li>
                 ))}
@@ -855,7 +855,7 @@ export function LabelWorkspace({
             )}
 
             <div>
-              <p className="mb-1 text-[11px] text-muted">
+              <p className="mb-1 text-xs text-muted">
                 Routine class, from the detector. Press 1 to 4 to correct it.
               </p>
               <div className="grid grid-cols-2 gap-1">
@@ -865,7 +865,7 @@ export function LabelWorkspace({
                     type="button"
                     disabled={!canLabel}
                     onClick={() => setChoice({ n: current.n, cls: name })}
-                    className={`rounded border px-2 py-1.5 text-[11px] uppercase disabled:opacity-40 ${cls === name ? "border-accent text-foreground" : "border-border text-muted"}`}
+                    className={`rounded-xl border px-2 py-1.5 text-xs first-letter:uppercase disabled:opacity-40 ${cls === name ? "border-accent text-foreground" : "border-border text-muted"}`}
                   >
                     {index + 1} {name}
                   </button>
@@ -877,7 +877,7 @@ export function LabelWorkspace({
               type="button"
               disabled={!canLabel || !cls}
               onClick={() => onLabelKey("routine")}
-              className="rounded bg-accent py-3 font-semibold tracking-[0.15em] text-background uppercase transition-opacity disabled:opacity-40"
+              className="rounded-full bg-accent py-3 font-semibold text-background first-letter:uppercase transition-opacity disabled:opacity-40"
             >
               Routine (R)
             </button>
@@ -885,7 +885,7 @@ export function LabelWorkspace({
               type="button"
               disabled={!canLabel}
               onClick={() => onLabelKey("anomaly")}
-              className="rounded border border-danger bg-danger/10 py-3 font-semibold tracking-[0.15em] text-danger uppercase transition-colors hover:bg-danger/20 disabled:opacity-40"
+              className="rounded-full border border-danger bg-danger/10 py-3 font-semibold text-danger first-letter:uppercase transition-colors hover:bg-danger/20 disabled:opacity-40"
             >
               Anomaly (A)
             </button>
@@ -904,7 +904,7 @@ export function LabelWorkspace({
               </button>
             </div>
 
-            <p className="text-[11px] leading-relaxed text-muted">
+            <p className="text-xs leading-relaxed text-muted">
               {noPicture
                 ? "No picture, so this event cannot be labelled. Skip it."
                 : heldBack
@@ -916,7 +916,7 @@ export function LabelWorkspace({
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <fieldset className="flex items-center gap-1 rounded border border-border bg-surface p-1">
+        <fieldset className="flex items-center gap-1 card p-1">
           <legend className="sr-only">Queue order</legend>
           {destination === "train" && suggestionsReady && (
             <button
@@ -925,7 +925,7 @@ export function LabelWorkspace({
                 orderTouchedRef.current = true;
                 setOrder("review");
               }}
-              className={`rounded px-3 py-1.5 font-mono text-[11px] tracking-wider uppercase ${order === "review" ? TOGGLE_ON : TOGGLE_OFF}`}
+              className={`rounded-lg px-3 py-1.5  text-xs  first-letter:uppercase ${order === "review" ? TOGGLE_ON : TOGGLE_OFF}`}
             >
               Review queue ({reviewCount})
             </button>
@@ -944,14 +944,14 @@ export function LabelWorkspace({
                 orderTouchedRef.current = true;
                 setOrder(value);
               }}
-              className={`rounded px-3 py-1.5 font-mono text-[11px] tracking-wider uppercase ${order === value ? TOGGLE_ON : TOGGLE_OFF}`}
+              className={`rounded-lg px-3 py-1.5  text-xs  first-letter:uppercase ${order === value ? TOGGLE_ON : TOGGLE_OFF}`}
             >
               {name}
             </button>
           ))}
         </fieldset>
 
-        <fieldset className="flex items-center gap-1 rounded border border-border bg-surface p-1">
+        <fieldset className="flex items-center gap-1 card p-1">
           <legend className="sr-only">View</legend>
           {(["single", "bulk"] as const).map((value) => (
             <button
@@ -959,7 +959,7 @@ export function LabelWorkspace({
               type="button"
               disabled={value === "bulk" && destination === "test"}
               onClick={() => setView(value)}
-              className={`rounded px-3 py-1.5 font-mono text-[11px] tracking-wider uppercase disabled:opacity-40 ${view === value ? TOGGLE_ON : TOGGLE_OFF}`}
+              className={`rounded-lg px-3 py-1.5  text-xs  first-letter:uppercase disabled:opacity-40 ${view === value ? TOGGLE_ON : TOGGLE_OFF}`}
             >
               {value === "single" ? "One at a time" : "Bulk confirm"}
             </button>
@@ -989,11 +989,11 @@ export function LabelWorkspace({
         >
           Refresh
         </button>
-        <span className="font-mono text-[11px] text-muted">{queue.length} in queue</span>
+        <span className="text-xs text-muted">{queue.length} in queue</span>
       </div>
 
       {order === "review" && (
-        <p className="font-mono text-[11px] leading-relaxed text-muted">
+        <p className="text-xs leading-relaxed text-muted">
           Suggested anomalies and the least certain events come first. Enter
           accepts. R or A corrects. {suggestedAnomalies} suggested anomal
           {suggestedAnomalies === 1 ? "y is" : "ies are"} shown one at a time
@@ -1003,14 +1003,14 @@ export function LabelWorkspace({
       )}
 
       {destination === "train" && suggestionsReady === false && (
-        <p className="font-mono text-[11px] text-muted">
+        <p className="text-xs text-muted">
           {nodeName} has no suggestions endpoint yet, so the review queue is
           off. Random and Likely still work.
         </p>
       )}
 
       {destination === "train" && suggestionsReady && (
-        <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] text-muted">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
           <button
             type="button"
             className={BUTTON}
@@ -1030,24 +1030,24 @@ export function LabelWorkspace({
       )}
 
       {order === "likely" && (
-        <p className="font-mono text-[11px] text-muted">
+        <p className="text-xs text-muted">
           Sorted by camera data only, never the model. A hint is a reason to
           look, not a label. Labelling only these skews the training mix, so
           also label from Random.
         </p>
       )}
 
-      <section className="rounded border border-border bg-surface p-4">
+      <section className="card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-mono text-[11px] tracking-widest text-muted uppercase">
+            <p className="text-xs text-muted first-letter:uppercase">
               Labels go to
             </p>
             <div className="mt-1 flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setDestination("train")}
-                className={`rounded px-3 py-1.5 font-mono text-[11px] tracking-wider uppercase ${destination === "train" ? TOGGLE_ON : TOGGLE_OFF}`}
+                className={`rounded-lg px-3 py-1.5  text-xs  first-letter:uppercase ${destination === "train" ? TOGGLE_ON : TOGGLE_OFF}`}
               >
                 Training (on node)
               </button>
@@ -1060,13 +1060,13 @@ export function LabelWorkspace({
                   // The test set is hand-labelled with nothing pre-filled.
                   if (order === "review") setOrder("random");
                 }}
-                className={`rounded px-3 py-1.5 font-mono text-[11px] tracking-wider uppercase disabled:opacity-40 ${destination === "test" ? TOGGLE_ON : TOGGLE_OFF}`}
+                className={`rounded-lg px-3 py-1.5  text-xs  first-letter:uppercase disabled:opacity-40 ${destination === "test" ? TOGGLE_ON : TOGGLE_OFF}`}
               >
                 Test set (console only)
               </button>
             </div>
           </div>
-          <div className="max-w-md text-right font-mono text-[11px] leading-relaxed text-muted">
+          <div className="max-w-md text-right text-xs leading-relaxed text-muted">
             Test set: {testItems.length} events, {testAnomalies} anomalies
             {frozenAt ? ", frozen." : ", not frozen."}
             <br />

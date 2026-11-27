@@ -103,6 +103,60 @@ body {
   .sheet-in {
     animation: sheet-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
   }
+
+  /* A page's blocks arriving one after another. */
+  .stagger > * {
+    animation: rise 320ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .stagger > :nth-child(2) { animation-delay: 50ms; }
+  .stagger > :nth-child(3) { animation-delay: 100ms; }
+  .stagger > :nth-child(4) { animation-delay: 150ms; }
+  .stagger > :nth-child(5) { animation-delay: 200ms; }
+  .stagger > :nth-child(6) { animation-delay: 250ms; }
+  .stagger > :nth-child(n + 7) { animation-delay: 300ms; }
+
+  /* A bar filling from the left. */
+  .grow-x {
+    transform-origin: left;
+    animation: grow-x 600ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+
+  .fade-in {
+    animation: fade-in 350ms ease-out backwards;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 9999px;
+    animation: spin 700ms linear infinite;
+  }
+}
+
+/* Every button and field answers to touch and keyboard. "scale" rather than
+   "transform", so it never fights a card being dragged. */
+button,
+a,
+input,
+select {
+  transition-property: color, background-color, border-color, box-shadow, opacity, scale;
+  transition-duration: 150ms;
+}
+button:not(:disabled):not([aria-label="Close menu"]):active {
+  scale: 0.97;
+}
+button:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+input:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(169, 180, 247, 0.18);
 }
 
 @keyframes rise {
@@ -125,6 +179,18 @@ body {
 
 @keyframes sheet-in {
   from { opacity: 0; transform: translateY(24px); }
+}
+
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes spin {
+  to { rotate: 360deg; }
 }
 
 @keyframes pop {

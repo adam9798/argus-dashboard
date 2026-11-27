@@ -63,7 +63,7 @@ export function FindNodes({ onFound }: { onFound?: () => void }) {
         type="button"
         onClick={find}
         disabled={scanning}
-        className="rounded border border-accent/60 bg-surface-raised px-3 py-1.5 font-mono text-[11px] tracking-wider text-foreground uppercase transition-colors hover:border-accent disabled:opacity-40"
+        className="rounded-full border border-accent/60 bg-surface-raised px-3 py-1.5 text-xs text-foreground first-letter:uppercase transition-colors hover:border-accent disabled:opacity-40"
       >
         {scanning ? "Searching…" : "Find nodes"}
       </button>

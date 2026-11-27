@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { findNode, sessionCookieName } from "@/lib/nodeSessions";
+import { findNode } from "@/lib/nodeSessions";
+import { nodeToken } from "@/lib/session";
 import { readState, serialized, writeState } from "@/lib/swipe/store";
 
 // Staging mode: the team acts out suspicious behaviour in front of one node
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
   if (!body || !findNode(nodeId)) {
     return NextResponse.json({ error: "Unknown node" }, { status: 404 });
   }
-  if (!(await cookies()).has(sessionCookieName(nodeId))) {
+  if (nodeToken(await cookies(), nodeId) === null) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 

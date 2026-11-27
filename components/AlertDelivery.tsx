@@ -84,10 +84,10 @@ export function AlertDelivery() {
     <section className="card rise mb-4 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="font-mono text-xs tracking-[0.25em] text-muted uppercase">
+          <h2 className="text-xs text-muted first-letter:uppercase">
             Alert delivery
           </h2>
-          <span className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-foreground uppercase">
+          <span className="flex items-center gap-2 text-xs text-foreground first-letter:uppercase">
             <StatusDot tone={tone} pulse={tone === "live"} />
             Discord · {label}
           </span>
@@ -96,21 +96,21 @@ export function AlertDelivery() {
           type="button"
           onClick={sendTest}
           disabled={testing || !status?.configured}
-          className="rounded border border-accent/60 bg-surface-raised px-3 py-1.5 font-mono text-[11px] tracking-wider text-foreground uppercase transition-colors hover:border-accent disabled:opacity-40"
+          className="rounded-full border border-accent/60 bg-surface-raised px-3 py-1.5 text-xs text-foreground first-letter:uppercase transition-colors hover:border-accent disabled:opacity-40"
         >
           {testing ? "Sending…" : "Send test alert"}
         </button>
       </div>
 
       {status && status.configured && (
-        <dl className="mt-4 grid grid-cols-2 gap-3 font-mono sm:grid-cols-4">
-          <div className="rounded border border-accent/30 bg-accent/5 p-3">
-            <dt className="text-[10px] tracking-[0.2em] text-muted uppercase">Nodes online</dt>
+        <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-accent/30 bg-accent/5 p-3">
+            <dt className="text-xs text-muted first-letter:uppercase">Nodes online</dt>
             <dd className="mt-1 text-3xl font-semibold text-accent">
               {status.nodes.filter((node) => node.reachable).length}
               <span className="text-lg text-muted"> / {status.nodes.length}</span>
             </dd>
-            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-foreground">
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground">
               {status.nodes.map((node) => (
                 <span key={node.id} className="flex items-center gap-1.5">
                   <StatusDot tone={node.reachable ? "live" : "down"} pulse={false} />
@@ -119,30 +119,30 @@ export function AlertDelivery() {
               ))}
             </div>
           </div>
-          <div className="rounded border border-border bg-surface-raised p-3">
-            <dt className="text-[10px] tracking-[0.2em] text-muted uppercase">Alerts sent</dt>
+          <div className="rounded-xl border border-border bg-surface-raised p-3">
+            <dt className="text-xs text-muted first-letter:uppercase">Alerts sent</dt>
             <dd className="mt-1 text-3xl font-semibold text-foreground">{status.sent}</dd>
-            <p className="mt-2 text-[11px] text-muted">to Discord, text only</p>
+            <p className="mt-2 text-xs text-muted">to Discord, text only</p>
           </div>
           <div
-            className={`rounded border p-3 ${
+            className={`rounded-xl border p-3 ${
               status.failed > 0 ? "border-danger/40 bg-danger/10" : "border-border bg-surface-raised"
             }`}
           >
-            <dt className="text-[10px] tracking-[0.2em] text-muted uppercase">Delivery failures</dt>
+            <dt className="text-xs text-muted first-letter:uppercase">Delivery failures</dt>
             <dd
               className={`mt-1 text-3xl font-semibold ${status.failed > 0 ? "text-danger" : "text-foreground"}`}
             >
               {status.failed}
             </dd>
-            <p className="mt-2 text-[11px] text-muted">retried, then kept in a log</p>
+            <p className="mt-2 text-xs text-muted">retried, then kept in a log</p>
           </div>
-          <div className="rounded border border-border bg-surface-raised p-3">
-            <dt className="text-[10px] tracking-[0.2em] text-muted uppercase">Last alert</dt>
+          <div className="rounded-xl border border-border bg-surface-raised p-3">
+            <dt className="text-xs text-muted first-letter:uppercase">Last alert</dt>
             <dd className="mt-1 text-xl font-semibold text-foreground">
               {status.last ? ago(status.last.at, now) : "none yet"}
             </dd>
-            <p className="mt-2 text-[11px] text-muted">
+            <p className="mt-2 text-xs text-muted">
               {status.last ? (status.last.test ? "test message" : status.last.node) : "waiting for a stranger"}
             </p>
           </div>

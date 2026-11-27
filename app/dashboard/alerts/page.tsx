@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEventFeed } from "@/hooks/useEventFeed";
 import { eventClipUrl, eventSnapshotUrl, type DetectionEvent } from "@/lib/api";
 import { DashboardNav } from "@/components/DashboardNav";
+import { NodeGate } from "@/components/NodeGate";
 import { FeedModeBadge } from "@/components/FeedModeBadge";
 import { EventList } from "@/components/EventList";
 import { EventDetailPanel } from "@/components/EventDetailPanel";
@@ -24,6 +25,15 @@ function isAlert(event: DetectionEvent): boolean {
 }
 
 export default function AlertsPage() {
+  return (
+    <NodeGate title="Alerts">
+      <AlertsContent />
+    </NodeGate>
+  );
+}
+
+/** Mounted only once the picked node has answered and accepted the sign-in. */
+function AlertsContent() {
   const { status } = useAuth();
   const router = useRouter();
   const { events, mode, error, loading, applyLabel } = useEventFeed();
@@ -37,7 +47,7 @@ export default function AlertsPage() {
   if (status !== "authenticated") {
     return (
       <div className="flex min-h-screen flex-1 items-center justify-center">
-        <p className="font-mono text-xs tracking-widest text-muted uppercase">
+        <p className="text-xs text-muted first-letter:uppercase">
           {status === "loading" ? "Checking session…" : "Redirecting…"}
         </p>
       </div>
@@ -59,24 +69,29 @@ export default function AlertsPage() {
   const selectedEvent = visible.find((event) => event.id === selectedId) ?? null;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-1 flex-col px-6 py-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-8 stagger">
       <DashboardNav title="Alerts" alertCount={unresolvedCount} pickNode />
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div
-          className={`flex-1 rounded border px-4 py-3 font-mono text-xs ${
-            unresolvedCount > 0
-              ? "border-danger/40 bg-danger/5 text-danger"
-              : "border-border bg-surface text-muted"
+          className={`card flex min-w-[min(100%,260px)] flex-1 items-center gap-4 px-5 py-3 ${
+            unresolvedCount > 0 ? "border-danger/45" : ""
           }`}
         >
-          {unresolvedCount > 0
-            ? `${unresolvedCount} alert${unresolvedCount === 1 ? "" : "s"} awaiting review`
-            : "No alerts awaiting review"}
+          <span
+            className={`font-mono text-4xl leading-none tabular-nums ${
+              unresolvedCount > 0 ? "text-danger" : "text-foreground"
+            }`}
+          >
+            {unresolvedCount}
+          </span>
+          <span className="text-sm text-muted">
+            {unresolvedCount === 1 ? "alert" : "alerts"} awaiting review
+          </span>
         </div>
         <button
           onClick={() => setUnresolvedOnly((value) => !value)}
-          className="rounded border border-border px-3 py-2 font-mono text-[11px] tracking-[0.2em] text-muted uppercase transition-colors hover:border-accent hover:text-foreground"
+          className="min-h-11 rounded-full border border-border px-5 text-sm text-muted hover:border-accent hover:text-foreground"
         >
           {unresolvedOnly ? "Show reviewed too" : "Unresolved only"}
         </button>
@@ -84,31 +99,31 @@ export default function AlertsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded border border-danger/30 bg-danger/10 px-4 py-3 font-mono text-xs text-danger">
+        <div className="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 font-mono text-xs text-danger">
           {error}
         </div>
       )}
 
       <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="min-h-[420px]">
+        <div className="min-h-[240px] lg:min-h-[420px]">
           {loading ? (
-            <div className="flex h-full items-center justify-center rounded border border-border bg-surface">
-              <p className="font-mono text-xs tracking-widest text-muted uppercase">
+            <div className="flex h-full items-center justify-center card">
+              <p className="text-xs text-muted first-letter:uppercase">
                 Loading alerts…
               </p>
             </div>
           ) : visible.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 rounded border border-border bg-surface px-6 text-center">
-              <p className="font-mono text-xs tracking-widest text-muted uppercase">
+            <div className="flex h-full flex-col items-center justify-center gap-3 card px-6 text-center">
+              <p className="text-xs text-muted first-letter:uppercase">
                 Nothing flagged
               </p>
-              <p className="max-w-sm font-mono text-[11px] leading-relaxed text-muted">
+              <p className="max-w-sm text-xs leading-relaxed text-muted">
                 Routine activity stays on the console. Alerts appear here when
                 the node judges something unusual for this site.
               </p>
               <Link
                 href="/dashboard"
-                className="font-mono text-[11px] tracking-[0.2em] text-accent uppercase"
+                className="text-xs text-accent first-letter:uppercase"
               >
                 Back to console
               </Link>
@@ -122,8 +137,9 @@ export default function AlertsPage() {
           )}
         </div>
 
-        <div className="flex min-h-[420px] flex-col gap-4">
-          {selectedEvent && <AlertSnapshot event={selectedEvent} />}
+        <div className="flex flex-col gap-4 lg:min-h-[420px]">
+          {/* Keyed so a failed picture is not remembered for the next event. */}
+          {selectedEvent && <AlertSnapshot key={selectedEvent.id} event={selectedEvent} />}
           <EventDetailPanel event={selectedEvent} onLabel={applyLabel} />
         </div>
       </div>
@@ -139,15 +155,9 @@ function AlertSnapshot({ event }: { event: DetectionEvent }) {
   const [failed, setFailed] = useState(false);
   const [clipFailed, setClipFailed] = useState(false);
 
-  // Keyed by the caller on nothing — reset when the event changes.
-  useEffect(() => {
-    setFailed(false);
-    setClipFailed(false);
-  }, [event.id]);
-
   if (event.clip && !clipFailed) {
     return (
-      <div className="overflow-hidden rounded border border-border bg-black">
+      <div className="card fade-in overflow-hidden bg-black">
         <video
           key={event.id}
           src={eventClipUrl(event.id)}
@@ -158,7 +168,7 @@ function AlertSnapshot({ event }: { event: DetectionEvent }) {
           className="aspect-video w-full object-contain"
           onError={() => setClipFailed(true)}
         />
-        <p className="border-t border-border px-4 py-2 font-mono text-[11px] tracking-widest text-danger uppercase">
+        <p className="border-t border-border px-4 py-2 text-xs text-danger first-letter:uppercase">
           Priority 1 · clip
         </p>
       </div>
@@ -168,7 +178,7 @@ function AlertSnapshot({ event }: { event: DetectionEvent }) {
   if (failed) return null;
 
   return (
-    <div className="overflow-hidden rounded border border-border bg-black">
+    <div className="card fade-in overflow-hidden bg-black">
       <img
         src={eventSnapshotUrl(event.id)}
         alt={`Still captured for event ${event.id}`}

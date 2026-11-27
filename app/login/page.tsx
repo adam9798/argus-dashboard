@@ -3,10 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { StatusDot } from "@/components/StatusDot";
 import { NodeSwitcher } from "@/components/NodeSwitcher";
 import { FindNodes } from "@/components/FindNodes";
+import { LogoMark } from "@/components/icons";
 import { NODES_CHANGED_EVENT } from "@/hooks/useNodes";
+
+const INPUT =
+  "mt-2 min-h-12 w-full rounded-xl border border-border bg-surface-raised px-4 py-3 text-base text-foreground outline-none focus:border-accent";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -24,45 +27,34 @@ export default function LoginPage() {
       await login(username, password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
-    } finally {
+      setError(err instanceof Error ? err.message : "Sign-in failed");
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <p className="font-mono text-xs tracking-[0.3em] text-muted uppercase">
-              ARGUS
-            </p>
-            <h1 className="mt-1 text-lg font-medium text-foreground">
-              Security console
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
-            <StatusDot tone="live" />
-            <span>NODES ONLINE</span>
-          </div>
+    <div className="flex min-h-dvh flex-1 items-center justify-center px-4 py-8">
+      <div className="stagger w-full max-w-md">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="card mb-4 flex h-16 w-16 items-center justify-center">
+            <LogoMark width={36} height={36} className="text-accent" />
+          </span>
+          <h1 className="font-mono text-4xl tracking-tight text-foreground">
+            ARGUS <span className="text-accent/70">Console</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            Sign in with a camera node&apos;s username and password.
+          </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-md border border-border bg-surface p-6"
-        >
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="card p-5 sm:p-7">
+          <div className="space-y-5">
             {/* Each node signs its own logins, so pick the node first. The
                 choice used to live only in the nav, which a browser left on
                 an offline node could never reach. */}
             <div>
-              <span className="block font-mono text-[11px] tracking-wider text-muted uppercase">
-                Node
-              </span>
-              <div className="mt-2">
-                <NodeSwitcher />
-              </div>
+              <span className="mb-2 block text-sm text-muted">Node</span>
+              <NodeSwitcher />
               {/* A new network can leave the saved addresses wrong, which
                   would otherwise block sign-in. */}
               <div className="mt-3">
@@ -72,47 +64,39 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="username"
-                className="block font-mono text-[11px] tracking-wider text-muted uppercase"
-              >
-                Username
-              </label>
+            <label className="block">
+              <span className="text-sm text-muted">Username</span>
               <input
-                id="username"
                 name="username"
                 type="text"
                 autoComplete="username"
+                autoCapitalize="none"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-2 w-full rounded border border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
+                className={INPUT}
               />
-            </div>
+            </label>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block font-mono text-[11px] tracking-wider text-muted uppercase"
-              >
-                Password
-              </label>
+            <label className="block">
+              <span className="text-sm text-muted">Password</span>
               <input
-                id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded border border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
+                className={INPUT}
               />
-            </div>
+            </label>
           </div>
 
           {error && (
-            <p className="mt-4 rounded border border-danger/30 bg-danger/10 px-3 py-2 font-mono text-xs text-danger">
+            <p
+              role="alert"
+              className="alert-in mt-5 rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger"
+            >
               {error}
             </p>
           )}
@@ -120,10 +104,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-6 w-full rounded bg-accent py-2 font-mono text-xs font-semibold tracking-[0.2em] text-background uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-accent text-sm font-semibold text-background hover:opacity-90 disabled:opacity-60"
           >
-            {submitting ? "Authenticating…" : "Authenticate"}
+            {submitting && <span className="spinner" aria-hidden />}
+            {submitting ? "Checking with the node…" : "Sign in"}
           </button>
+          {submitting && (
+            <p className="fade-in mt-3 text-center text-xs text-muted">
+              This can take up to 10 seconds. Please don&apos;t press it again.
+            </p>
+          )}
         </form>
       </div>
     </div>

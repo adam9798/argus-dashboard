@@ -146,7 +146,7 @@ export function SwipeCardBody({
             <Snapshot item={card.lead} nodeId={nodeId} zoom={zoom} onState={onImageState} />
           </button>
         )}
-        <span className={`absolute top-2 left-2 rounded-full px-2.5 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur ${badge.className}`}>
+        <span className={`absolute top-2 left-2 rounded-full px-2.5 py-1  text-xs  first-letter:uppercase backdrop-blur ${badge.className}`}>
           {badge.text}
         </span>
         {count > 1 && (
@@ -170,7 +170,7 @@ export function SwipeCardBody({
       </div>
 
       <div className="flex flex-col gap-2 px-4 py-3">
-        <div className="flex items-baseline justify-between gap-2 font-mono text-[11px] text-muted">
+        <div className="flex items-baseline justify-between gap-2 font-mono text-xs text-muted">
           <span>
             {nodeName} · #{card.lead.n}
           </span>
@@ -182,7 +182,7 @@ export function SwipeCardBody({
           </span>
           {card.guess ? (
             <span
-              className={`rounded px-2 py-0.5 text-sm font-semibold ${
+              className={`rounded-lg px-2 py-0.5 text-sm font-semibold ${
                 card.guess.label === "anomaly" ? "bg-danger/15 text-danger" : "bg-accent/15 text-accent"
               }`}
               title={card.guess.source}
@@ -192,7 +192,7 @@ export function SwipeCardBody({
               {card.guess.confidence !== null && ` ${Math.round(card.guess.confidence * 100)}%`}
             </span>
           ) : (
-            <span className="rounded bg-foreground/10 px-2 py-0.5 text-sm text-muted">Your call</span>
+            <span className="rounded-lg bg-foreground/10 px-2 py-0.5 text-sm text-muted">Your call</span>
           )}
         </div>
         {card.guess?.confidence !== null && card.guess && (
@@ -210,7 +210,7 @@ export function SwipeCardBody({
           {card.members.map((member) => (
             <div key={member.n} className="flex flex-col">
               <Snapshot item={member} nodeId={nodeId} zoom={false} className="rounded" />
-              <span className="mt-0.5 text-center font-mono text-[9px] text-muted">
+              <span className="mt-0.5 text-center font-mono text-xs text-muted">
                 #{member.n} · {new Date(member.t * 1000).toLocaleTimeString()}
               </span>
             </div>

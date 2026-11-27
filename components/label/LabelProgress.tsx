@@ -33,22 +33,22 @@ export function LabelProgress({
   const anomalies = counts.anomaly;
 
   return (
-    <section className="grid items-center gap-4 rounded border border-border bg-surface px-4 py-3 md:grid-cols-[auto_1fr]">
+    <section className="grid items-center gap-4 card px-4 py-3 md:grid-cols-[auto_1fr]">
       <div className="flex items-center gap-3 pr-6 md:border-r md:border-border">
         <p className="text-4xl leading-none font-semibold text-foreground">{anomalies}</p>
-        <p className="max-w-[130px] font-mono text-[11px] leading-snug tracking-wider text-muted uppercase">
+        <p className="max-w-[130px] text-xs leading-snug text-muted first-letter:uppercase">
           Anomalies reviewed
         </p>
       </div>
 
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p className="font-mono text-xs text-foreground">
+          <p className="text-xs text-foreground">
             <span className="text-lg font-semibold">{labelled}</span> of{" "}
             {MIN_LABELS_PER_NODE} human-reviewed labels for a round
             {pending > 0 && <span className="text-muted"> · {pending} saving</span>}
           </p>
-          <p className="font-mono text-[11px] text-muted">
+          <p className="text-xs text-muted">
             {totalEvents} events recorded
             {synthetic > 0 && ` · ${synthetic} synthetic rows excluded`}
           </p>
@@ -62,13 +62,13 @@ export function LabelProgress({
           className="mt-2 h-2 rounded-full bg-surface-raised"
         >
           <div
-            className="h-2 rounded-full bg-accent transition-[width]"
+            className="grow-x h-2 rounded-full bg-accent transition-[width] duration-500"
             style={{ width: `${share * 100}%` }}
           />
         </div>
 
         {labelled > 0 && (
-          <div className="mt-2 flex h-2 gap-0.5" aria-hidden>
+          <div className="grow-x mt-2 flex h-2 gap-0.5" aria-hidden>
             {SEGMENTS.filter((segment) => counts[segment.label] > 0).map((segment) => (
               <div
                 key={segment.label}
@@ -78,7 +78,7 @@ export function LabelProgress({
             ))}
           </div>
         )}
-        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-muted">
+        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
           {SEGMENTS.map((segment) => (
             <li key={segment.label} className="flex items-center gap-1.5">
               <span
@@ -91,7 +91,7 @@ export function LabelProgress({
             </li>
           ))}
         </ul>
-        <p className="mt-1 font-mono text-[11px] text-muted">
+        <p className="mt-1 text-xs text-muted">
           Real camera events only, synthetic rows excluded. Unlabelled is never
           treated as routine. {machineLabelled} machine label
           {machineLabelled === 1 ? "" : "s"} on this node not reviewed yet.

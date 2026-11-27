@@ -32,7 +32,7 @@ export function SnapshotImage({
 
   if (state === "failed") {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded bg-surface-raised px-4 text-center font-mono text-[11px] text-muted">
+      <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-surface-raised px-4 text-center text-xs text-muted">
         No picture for event {sample.n}. It cannot be labelled.
       </div>
     );

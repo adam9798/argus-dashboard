@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { capture } from "@/lib/fl/capture";
 import { dataDir } from "@/lib/fl/store";
 import type { HistoryResponse } from "@/lib/fl/types";
-import { isSessionCookie } from "@/lib/nodeSessions";
+import { hasAnySession } from "@/lib/session";
 
 // Reading the page is what records a round: each poll copies anything new
 // from the aggregator and the nodes to disk (lib/fl/capture.ts, GET-only).
@@ -11,8 +11,7 @@ import { isSessionCookie } from "@/lib/nodeSessions";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const jar = await cookies();
-  if (!jar.getAll().some((cookie) => isSessionCookie(cookie.name))) {
+  if (!hasAnySession(await cookies())) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 

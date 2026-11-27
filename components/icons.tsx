@@ -32,13 +32,6 @@ export const OverviewIcon = (props: IconProps) => (
   </Icon>
 );
 
-export const VideoIcon = (props: IconProps) => (
-  <Icon {...props}>
-    <rect x="3" y="6" width="12.5" height="12" rx="3" />
-    <path d="M15.5 10.5 21 7.5v9l-5.5-3" />
-  </Icon>
-);
-
 export const BellIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M6 10a6 6 0 0 1 12 0c0 4.5 1.5 6 2 6.5H4c.5-.5 2-2 2-6.5Z" />
@@ -105,6 +98,18 @@ export const CollapseIcon = (props: IconProps) => (
 export const ChevronIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="m9 5 7 7-7 7" />
+  </Icon>
+);
+
+export const ExpandIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M9 4H5a1 1 0 0 0-1 1v4M15 4h4a1 1 0 0 1 1 1v4M9 20H5a1 1 0 0 1-1-1v-4M15 20h4a1 1 0 0 0 1-1v-4" />
+  </Icon>
+);
+
+export const CloseIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M6 6l12 12M18 6 6 18" />
   </Icon>
 );
 

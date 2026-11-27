@@ -43,9 +43,9 @@ export function RunHistory({ history }: { history: HistoryFile }) {
   const runs = [...history.runs].reverse();
 
   return (
-    <section className="rounded border border-border bg-surface p-4 font-mono text-xs">
+    <section className="card p-4 text-xs">
       <h2 className="font-sans text-sm font-medium text-foreground">Run history</h2>
-      <p className="mt-1 text-[11px] leading-relaxed text-muted">
+      <p className="mt-1 text-xs leading-relaxed text-muted">
         Only rounds that ran on the Pis. Simulation runs are not listed, and a
         run with synthetic rows on any node is marked and left out of the trends.
       </p>
@@ -144,7 +144,7 @@ function RunDetail({
                 (reports as {node.reportedName ?? "unknown"}) · {node.runDir}
               </span>
             </p>
-            <dl className="mt-1 grid gap-x-6 gap-y-0.5 text-[11px] sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="mt-1 grid gap-x-6 gap-y-0.5 text-xs sm:grid-cols-2 lg:grid-cols-3">
               <Fact name="Train / validation samples" value={`${node.trainSamples ?? "?"} / ${node.valSamples ?? "?"}`} />
               <Fact
                 name="Trained on"
@@ -193,7 +193,7 @@ function RunDetail({
       })}
 
       {run.serverRounds.map((round) => (
-        <div key={round.key} className="text-[11px]">
+        <div key={round.key} className="text-xs">
           <p className="text-foreground">
             Server round {round.round_num} · {round.num_clients} clients ·{" "}
             {round.duration_seconds.toFixed(1)} s · server version {round.model_version}
@@ -220,7 +220,7 @@ function RunDetail({
         </div>
       ))}
 
-      <p className="text-[11px] leading-relaxed text-muted">
+      <p className="text-xs leading-relaxed text-muted">
         Training loss and per-class recall are not sent by the node or the
         server today, so they are left blank rather than estimated. The gate
         is scored on the node&apos;s own holdout, which reshuffles as labels are

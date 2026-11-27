@@ -7,7 +7,8 @@ import {
   type NoteKind,
   type OperatorNote,
 } from "@/lib/fl/types";
-import { findNode, sessionCookieName } from "@/lib/nodeSessions";
+import { findNode } from "@/lib/nodeSessions";
+import { nodeToken } from "@/lib/session";
 
 // Operator decisions kept on this console: the held-back test set, skips,
 // "not a real object", and an audit copy of labels sent to a node. Nothing
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 const KINDS: NoteKind[] = ["train", "test", "skip", "not_object", "cleared"];
 
 async function signedIn(nodeId: string): Promise<boolean> {
-  return (await cookies()).has(sessionCookieName(nodeId));
+  return nodeToken(await cookies(), nodeId) !== null;
 }
 
 export async function GET(request: NextRequest) {

@@ -209,7 +209,7 @@ export default function FederatedPage() {
   if (status !== "authenticated") {
     return (
       <div className="flex min-h-screen flex-1 items-center justify-center">
-        <p className="font-mono text-xs tracking-widest text-muted uppercase">
+        <p className="text-xs text-muted first-letter:uppercase">
           {status === "loading" ? "Checking session…" : "Redirecting…"}
         </p>
       </div>
@@ -221,10 +221,10 @@ export default function FederatedPage() {
     history ? perVersion(history, nodeId).at(-1) : undefined;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-1 flex-col gap-4 px-6 py-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 sm:px-8 stagger">
       <DashboardNav title="Federated learning" />
 
-      <p className="font-mono text-[11px] leading-relaxed text-muted">
+      <p className="text-xs leading-relaxed text-muted">
         Rounds train the anomaly head, which judges whether a detection is
         routine for this site. They do not change YOLO or its bounding boxes.
         Real data only: synthetic rows are excluded, and the Nov 8 simulation is
@@ -234,7 +234,7 @@ export default function FederatedPage() {
       </p>
 
       {problem && (
-        <div className="rounded border border-danger/30 bg-danger/10 px-4 py-3 font-mono text-xs text-danger">
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-xs text-danger">
           {problem}
         </div>
       )}
@@ -242,16 +242,16 @@ export default function FederatedPage() {
       {preflight ? (
         <PreflightPanel data={preflight} />
       ) : (
-        <p className="rounded border border-border bg-surface p-6 font-mono text-xs text-muted">
+        <p className="card p-6 text-xs text-muted">
           Reading the nodes and the Flower server…
         </p>
       )}
 
-      <section className="rounded border border-border bg-surface p-4 font-mono text-xs">
+      <section className="card p-4 text-xs">
         <h2 className="font-sans text-sm font-medium text-foreground">
           Is it improving?
         </h2>
-        <p className="mt-1 text-[11px] leading-relaxed text-muted">
+        <p className="mt-1 text-xs leading-relaxed text-muted">
           Judged only on each node&apos;s frozen test set: events labelled on
           this console and never sent to the node, so no round has trained on
           them. It says improving or regressing only when the 95% ranges stop
@@ -267,13 +267,13 @@ export default function FederatedPage() {
                 <button
                   type="button"
                   onClick={() => measure(node.id)}
-                  className="text-[11px] text-accent underline-offset-2 hover:underline"
+                  className="text-xs text-accent underline-offset-2 hover:underline"
                 >
                   Measure now
                 </button>
               )}
               {lastMeasurement(node.id) && (
-                <span className="text-[11px] text-muted">
+                <span className="text-xs text-muted">
                   Latest on {lastMeasurement(node.id)!.modelVersion}
                   {lastMeasurement(node.id)!.contaminated > 0 &&
                     `, ${lastMeasurement(node.id)!.contaminated} excluded as labelled on node`}
@@ -282,7 +282,7 @@ export default function FederatedPage() {
             </li>
           ))}
         </ul>
-        {measureNote && <p className="mt-2 text-[11px] text-accent">{measureNote}</p>}
+        {measureNote && <p className="mt-2 text-xs text-accent">{measureNote}</p>}
       </section>
 
       {testCharts && (
@@ -316,7 +316,7 @@ export default function FederatedPage() {
           <h2 className="mb-2 text-sm font-medium text-foreground">
             Validation gate, per node
           </h2>
-          <p className="mb-3 font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mb-3 text-xs leading-relaxed text-muted">
             Candidate against live on the node&apos;s own holdout. Read within
             one run: the holdout reshuffles when labels are added, so scores in
             different runs are not on the same events.
@@ -340,7 +340,7 @@ export default function FederatedPage() {
 
       {preflight && <DetectorQualityPanel data={preflight} />}
 
-      <p className="font-mono text-[11px] text-muted">
+      <p className="text-xs text-muted">
         {historyData ? `History is saved in ${historyData.dataDir}. ` : ""}
         Keep this page open during a round so each result is copied there as
         soon as it appears.
@@ -361,7 +361,7 @@ function Verdict({
 }) {
   const style = VERDICT_STYLE[kind];
   return (
-    <span className="text-[11px] text-muted">
+    <span className="text-xs text-muted">
       {name}:{" "}
       <span aria-hidden style={{ color: style.color }}>
         {style.icon}

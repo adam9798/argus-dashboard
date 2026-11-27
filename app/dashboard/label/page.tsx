@@ -24,11 +24,11 @@ export default function LabelPage() {
   const active = nodes.find((node) => node.id === activeId) ?? null;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-1 flex-col px-6 py-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-8 stagger">
       <DashboardNav title="Label events" />
 
       {status !== "authenticated" || !loaded ? (
-        <p className="font-mono text-xs tracking-widest text-muted uppercase">
+        <p className="text-xs text-muted first-letter:uppercase">
           {status === "unauthenticated" ? "Redirecting…" : "Checking session…"}
         </p>
       ) : (
@@ -36,7 +36,7 @@ export default function LabelPage() {
           <div
             role="tablist"
             aria-label="Node to label"
-            className="mb-4 flex w-fit items-center gap-1 rounded border border-border bg-surface p-1"
+            className="mb-4 flex w-fit items-center gap-1 card p-1"
           >
             {nodes.map((node) => (
               <button
@@ -45,7 +45,7 @@ export default function LabelPage() {
                 role="tab"
                 aria-selected={node.id === activeId}
                 onClick={() => setPicked(node.id)}
-                className={`rounded px-4 py-2 font-mono text-xs tracking-[0.2em] uppercase transition-colors ${
+                className={`rounded-lg px-4 py-2  text-xs  first-letter:uppercase transition-colors ${
                   node.id === activeId
                     ? "bg-surface-raised text-foreground"
                     : "text-muted hover:text-foreground"

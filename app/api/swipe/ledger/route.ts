@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { LABEL_NAMES, type LabelName } from "@/lib/fl/types";
-import { findNode, sessionCookieName } from "@/lib/nodeSessions";
+import { findNode } from "@/lib/nodeSessions";
+import { nodeToken } from "@/lib/session";
 import { appendLedger, serialized } from "@/lib/swipe/store";
 import type { LedgerEntry } from "@/lib/swipe/types";
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!valid(entry) || !findNode(entry.node)) {
       return NextResponse.json({ error: "Bad entry" }, { status: 422 });
     }
-    if (!jar.has(sessionCookieName(entry.node))) {
+    if (nodeToken(jar, entry.node) === null) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     clean.push({

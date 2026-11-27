@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { findNode, isSessionCookie, sessionCookieName } from "@/lib/nodeSessions";
+import { findNode } from "@/lib/nodeSessions";
+import { hasAnySession, nodeToken } from "@/lib/session";
 import { reviewerStats, effectiveEntries } from "@/lib/swipe/stats";
 import { readLedger, readState, serialized, writeState } from "@/lib/swipe/store";
 import type { DateWindow, SwipeSettings, TrainingRule } from "@/lib/swipe/types";
@@ -12,7 +13,7 @@ import type { DateWindow, SwipeSettings, TrainingRule } from "@/lib/swipe/types"
 export const dynamic = "force-dynamic";
 
 async function anySession(): Promise<boolean> {
-  return (await cookies()).getAll().some((cookie) => isSessionCookie(cookie.name));
+  return hasAnySession(await cookies());
 }
 
 export async function GET(request: NextRequest) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   const [state, ledger] = await Promise.all([readState(), readLedger()]);
   let decided: { n: number; label: string | null; at: number; source: string }[] = [];
   if (nodeId) {
-    if (!(await cookies()).has(sessionCookieName(nodeId))) {
+    if (nodeToken(await cookies(), nodeId) === null) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     // Latest entry in force per event on this node.

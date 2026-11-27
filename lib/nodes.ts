@@ -39,12 +39,8 @@ export function nodeId(name: string): string {
   return slug(name);
 }
 
-/**
- * ARGUS_NODES, with each address replaced by where network discovery last
- * found a node of that name. Discovered nodes that ARGUS_NODES does not list
- * are added, so the variable is optional.
- */
-export function configuredNodes(): NodeConfig[] {
+/** The nodes named in ARGUS_NODES, as written there. */
+function listedNodes(): NodeConfig[] {
   const raw = process.env.ARGUS_NODES?.trim();
   const nodes: NodeConfig[] = [];
 
@@ -58,6 +54,25 @@ export function configuredNodes(): NodeConfig[] {
     while (nodes.some((node) => node.id === id)) id += "-2";
     nodes.push({ id, name, baseUrl });
   }
+  return nodes;
+}
+
+/**
+ * The nodes whose sign-in opens the console as a whole: the ones listed in
+ * ARGUS_NODES, or every known node when none are listed.
+ */
+export function trustedNodeIds(): string[] {
+  const listed = listedNodes();
+  return (listed.length > 0 ? listed : configuredNodes()).map((node) => node.id);
+}
+
+/**
+ * ARGUS_NODES, with each address replaced by where network discovery last
+ * found a node of that name. Discovered nodes that ARGUS_NODES does not list
+ * are added, so the variable is optional.
+ */
+export function configuredNodes(): NodeConfig[] {
+  const nodes = listedNodes();
 
   const discovered = [...readDiscovered()].sort((a, b) => a.name.localeCompare(b.name));
   for (const found of discovered) {

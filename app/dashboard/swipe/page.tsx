@@ -48,20 +48,20 @@ export default function SwipePage() {
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-3 pb-8">
       <header className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <Link href="/dashboard" className="font-mono text-[10px] tracking-[0.3em] text-muted uppercase hover:text-accent">
+          <Link href="/dashboard" className="text-xs text-muted first-letter:uppercase hover:text-accent">
             ARGUS ‹ console
           </Link>
           <h1 className="text-lg leading-tight font-semibold text-foreground">Swipe to label</h1>
         </div>
         {reviewer && (
-          <button type="button" onClick={() => setReviewer("")} className="rounded-full border border-border px-3 py-1 font-mono text-[11px] text-muted" title="Change reviewer">
+          <button type="button" onClick={() => setReviewer("")} className="rounded-full border border-border px-3 py-1 font-mono text-xs text-muted" title="Change reviewer">
             {reviewer}
           </button>
         )}
       </header>
 
       {status !== "authenticated" || !loaded || reviewer === null ? (
-        <p className="font-mono text-xs tracking-widest text-muted uppercase">
+        <p className="text-xs text-muted first-letter:uppercase">
           {status === "unauthenticated" ? "Redirecting…" : "Checking session…"}
         </p>
       ) : !reviewer ? (
@@ -83,7 +83,7 @@ export default function SwipePage() {
       ) : (
         <>
           {nodes.length > 1 && (
-            <div role="tablist" aria-label="Node" className="mb-3 grid grid-flow-col gap-1 rounded-xl border border-border bg-surface p-1">
+            <div role="tablist" aria-label="Node" className="mb-3 grid grid-flow-col gap-1 card p-1">
               {nodes.map((node) => (
                 <button
                   key={node.id}
@@ -91,7 +91,7 @@ export default function SwipePage() {
                   role="tab"
                   aria-selected={node.id === activeId}
                   onClick={() => setPicked(node.id)}
-                  className={`rounded-lg px-3 py-2 font-mono text-xs tracking-wider uppercase ${
+                  className={`rounded-lg px-3 py-2  text-xs  first-letter:uppercase ${
                     node.id === activeId ? "bg-surface-raised text-foreground" : "text-muted"
                   }`}
                 >

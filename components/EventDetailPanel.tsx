@@ -13,8 +13,8 @@ export function EventDetailPanel({
 }) {
   if (!event) {
     return (
-      <div className="flex h-full items-center justify-center rounded border border-border bg-surface p-6">
-        <p className="font-mono text-xs tracking-widest text-muted uppercase">
+      <div className="flex h-full items-center justify-center card p-6">
+        <p className="text-xs text-muted first-letter:uppercase">
           Select an event
         </p>
       </div>
@@ -24,10 +24,11 @@ export function EventDetailPanel({
   const isAlert = event.status === "stranger";
 
   return (
-    <div className="flex h-full flex-col rounded border border-border bg-surface p-6">
+    // Keyed so each newly picked event fades in.
+    <div key={event.id} className="card fade-in flex h-full flex-col p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[11px] tracking-widest text-muted uppercase">
+          <p className="text-xs text-muted first-letter:uppercase">
             {event.cls}
           </p>
           <h2 className="mt-1 text-lg font-medium text-foreground">
@@ -35,7 +36,7 @@ export function EventDetailPanel({
           </h2>
         </div>
         {isAlert && (
-          <span className="shrink-0 rounded border border-danger/40 bg-danger/10 px-2 py-1 font-mono text-[10px] tracking-widest text-danger uppercase">
+          <span className="shrink-0 rounded-xl border border-danger/40 bg-danger/10 px-2 py-1 text-xs text-danger first-letter:uppercase">
             Unverified
           </span>
         )}
@@ -100,7 +101,7 @@ function EventActions({
   return (
     <>
       {error && (
-        <p className="mt-4 rounded border border-danger/30 bg-danger/10 px-3 py-2 font-mono text-xs text-danger">
+        <p className="mt-4 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 font-mono text-xs text-danger">
           {error}
         </p>
       )}
@@ -111,14 +112,14 @@ function EventActions({
             <button
               onClick={handleConfirm}
               disabled={submitting}
-              className="flex-1 rounded bg-accent py-2 font-mono text-xs font-semibold tracking-[0.2em] text-background uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex-1 rounded-full bg-accent py-2 text-xs font-semibold text-background first-letter:uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               Confirm
             </button>
             <button
               onClick={() => setCorrecting(true)}
               disabled={submitting}
-              className="flex-1 rounded border border-border py-2 font-mono text-xs tracking-[0.2em] text-muted uppercase transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
+              className="flex-1 rounded-full border border-border py-2 text-xs text-muted first-letter:uppercase transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
             >
               Correct
             </button>
@@ -130,20 +131,20 @@ function EventActions({
               value={correctedLabel}
               onChange={(e) => setCorrectedLabel(e.target.value)}
               placeholder="Corrected label"
-              className="w-full rounded border border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
+              className="w-full rounded-xl border border-border bg-surface-raised px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleCorrectSubmit}
                 disabled={submitting}
-                className="flex-1 rounded bg-accent py-2 font-mono text-xs font-semibold tracking-[0.2em] text-background uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="flex-1 rounded-full bg-accent py-2 text-xs font-semibold text-background first-letter:uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 Submit
               </button>
               <button
                 onClick={() => setCorrecting(false)}
                 disabled={submitting}
-                className="rounded border border-border px-4 py-2 font-mono text-xs tracking-[0.2em] text-muted uppercase transition-colors hover:text-foreground"
+                className="rounded-full border border-border px-4 py-2 text-xs text-muted first-letter:uppercase transition-colors hover:text-foreground"
               >
                 Cancel
               </button>
@@ -158,7 +159,7 @@ function EventActions({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-2">
-      <span className="tracking-wider text-muted uppercase">{label}</span>
+      <span className="text-muted first-letter:uppercase">{label}</span>
       <span className="text-foreground">{value}</span>
     </div>
   );

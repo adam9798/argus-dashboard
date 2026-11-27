@@ -23,7 +23,6 @@ import {
   SwipeIcon,
   TagIcon,
   ThermometerIcon,
-  VideoIcon,
 } from "@/components/icons";
 
 // The frame around every console page: a sidebar on wide screens and a bottom
@@ -31,7 +30,6 @@ import {
 
 const LINKS = [
   { href: "/dashboard", label: "Overview", Icon: OverviewIcon },
-  { href: "/dashboard/live", label: "Live feed", Icon: VideoIcon },
   { href: "/dashboard/alerts", label: "Alerts", Icon: BellIcon },
   { href: "/dashboard/label", label: "Label", Icon: TagIcon },
   { href: "/dashboard/swipe", label: "Swipe", Icon: SwipeIcon },

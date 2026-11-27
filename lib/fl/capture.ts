@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { configuredNodes, type NodeConfig } from "@/lib/nodes";
-import { sessionCookieName } from "@/lib/nodeSessions";
+import { nodeToken } from "@/lib/session";
 import {
   latestNotes,
   readHistory,
@@ -63,10 +63,7 @@ export async function getJson<T>(
 export async function nodeTokens(): Promise<Map<string, string | null>> {
   const jar = await cookies();
   return new Map(
-    configuredNodes().map((node) => [
-      node.id,
-      jar.get(sessionCookieName(node.id))?.value ?? null,
-    ]),
+    configuredNodes().map((node) => [node.id, nodeToken(jar, node.id)]),
   );
 }
 

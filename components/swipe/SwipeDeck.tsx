@@ -466,14 +466,14 @@ export function SwipeDeck({
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
         <p className="text-sm text-muted">{error}</p>
-        <button type="button" className="rounded border border-border px-4 py-2 text-sm" onClick={() => bumpReload()}>
+        <button type="button" className="rounded-xl border border-border px-4 py-2 text-sm" onClick={() => bumpReload()}>
           Retry
         </button>
       </div>
     );
   }
   if (phase === "loading" || !settings) {
-    return <p className="py-10 text-center font-mono text-xs tracking-widest text-muted uppercase">Shuffling the deck…</p>;
+    return <p className="py-10 text-center text-xs text-muted first-letter:uppercase">Shuffling the deck…</p>;
   }
 
   const progress = Math.min(1, todayCount / goal);
@@ -512,7 +512,7 @@ export function SwipeDeck({
             style={{ width: `${progress * 100}%` }}
           />
         </div>
-        <div className="flex justify-between font-mono text-[10px] text-muted">
+        <div className="flex justify-between font-mono text-xs text-muted">
           <span>{cards.length} cards left · {WINDOW_LABEL[settings.window]}</span>
           <span>{todayCount >= goal ? "Goal done 🎉" : `≈ ${minutesLeft} min to goal`}</span>
         </div>
@@ -576,28 +576,28 @@ export function SwipeDeck({
       <div className="grid grid-cols-4 gap-2">
         <button type="button" onClick={() => commit("left")} disabled={!current} className="flex flex-col items-center rounded-2xl border-2 border-accent/50 bg-accent/10 py-3 text-accent transition-transform active:scale-90 disabled:opacity-30" aria-label="Routine (left arrow)">
           <span className="text-2xl leading-none">←</span>
-          <span className="mt-1 text-[11px] font-semibold">Routine</span>
+          <span className="mt-1 text-xs font-semibold">Routine</span>
         </button>
         <button type="button" onClick={() => commit("up")} disabled={!current} className="flex flex-col items-center rounded-2xl border-2 border-border bg-surface-raised py-3 text-muted transition-transform active:scale-90 disabled:opacity-30" aria-label="Skip or unsure (up arrow)">
           <span className="text-2xl leading-none">↑</span>
-          <span className="mt-1 text-[11px] font-semibold">Unsure</span>
+          <span className="mt-1 text-xs font-semibold">Unsure</span>
         </button>
         <button type="button" onClick={() => commit("right")} disabled={!current} className="flex flex-col items-center rounded-2xl border-2 border-danger/50 bg-danger/10 py-3 text-danger transition-transform active:scale-90 disabled:opacity-30" aria-label="Anomaly (right arrow)">
           <span className="text-2xl leading-none">→</span>
-          <span className="mt-1 text-[11px] font-semibold">Anomaly</span>
+          <span className="mt-1 text-xs font-semibold">Anomaly</span>
         </button>
         <button type="button" onClick={undo} disabled={history.length === 0} className="flex flex-col items-center rounded-2xl border-2 border-border bg-surface py-3 text-foreground transition-transform active:scale-90 disabled:opacity-30" aria-label="Undo last swipe (Z)">
           <span className="text-2xl leading-none">↶</span>
-          <span className="mt-1 text-[11px] font-semibold">Undo</span>
+          <span className="mt-1 text-xs font-semibold">Undo</span>
         </button>
       </div>
-      <p className="hidden text-center font-mono text-[10px] text-muted sm:block">← routine · → anomaly · ↑ unsure · Z undo · space expands a group</p>
+      <p className="hidden text-center font-mono text-xs text-muted sm:block">← routine · → anomaly · ↑ unsure · Z undo · space expands a group</p>
 
       {toast && (
         <div role="status" className={`fixed inset-x-4 bottom-6 z-40 mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm shadow-xl ${toast.tone === "good" ? "bg-accent text-black" : toast.tone === "bad" ? "bg-danger text-white" : "bg-surface-raised text-foreground"}`}>
           <span>{toast.text}</span>
           {failed.length > 0 && toast.tone === "bad" && (
-            <button type="button" onClick={retry} className="rounded bg-black/20 px-2 py-1 font-semibold">Retry</button>
+            <button type="button" onClick={retry} className="rounded-lg bg-black/20 px-2 py-1 font-semibold">Retry</button>
           )}
         </div>
       )}
@@ -617,15 +617,15 @@ export function SwipeDeck({
       )}
 
       {/* Tools */}
-      <div className="mt-2 rounded-xl border border-border bg-surface">
-        <button type="button" onClick={() => setShowTools((s) => !s)} className="flex w-full items-center justify-between px-4 py-3 font-mono text-xs tracking-wider text-muted uppercase">
+      <div className="mt-2 card">
+        <button type="button" onClick={() => setShowTools((s) => !s)} className="flex w-full items-center justify-between px-4 py-3 text-xs text-muted first-letter:uppercase">
           <span>Filters, goal and auto-label</span>
           <span>{showTools ? "▴" : "▾"}</span>
         </button>
         {showTools && (
           <div className="flex flex-col gap-4 border-t border-border px-4 py-4 text-sm">
             <div>
-              <p className="mb-1.5 font-mono text-[11px] tracking-wider text-muted uppercase">Dates in the deck</p>
+              <p className="mb-1.5 text-xs text-muted first-letter:uppercase">Dates in the deck</p>
               <div className="grid grid-cols-3 gap-1 rounded-lg bg-surface-raised p-1">
                 {(["first", "home", "all"] as DateWindow[]).map((w) => (
                   <button key={w} type="button" onClick={() => changeSettings({ window: w }, true)} className={`rounded-md px-2 py-2 text-xs ${settings.window === w ? "bg-accent text-black" : "text-muted"}`}>
@@ -634,7 +634,7 @@ export function SwipeDeck({
                 ))}
               </div>
               {settings.window !== "first" && settings.trainingRule !== "include-home" && (
-                <p className="mt-2 rounded bg-amber-400/10 px-2 py-1.5 text-xs text-amber-300">
+                <p className="mt-2 rounded-lg bg-amber-400/10 px-2 py-1.5 text-xs text-amber-300">
                   {settings.trainingRule === "pending"
                     ? "Gio has not decided yet whether home-location labels count for training. Labels you give here are saved and marked, but may be left out of the next round."
                     : "Training uses first-location data only. Home-location labels are saved but not trained on."}
@@ -642,7 +642,7 @@ export function SwipeDeck({
               )}
               <p className="mt-2 text-xs text-muted">
                 Training rule:{" "}
-                <select value={settings.trainingRule} onChange={(e) => changeSettings({ trainingRule: e.target.value as SwipeSettings["trainingRule"] })} className="rounded border border-border bg-surface-raised px-1 py-0.5 text-foreground">
+                <select value={settings.trainingRule} onChange={(e) => changeSettings({ trainingRule: e.target.value as SwipeSettings["trainingRule"] })} className="rounded-xl border border-border bg-surface-raised px-1 py-0.5 text-foreground">
                   <option value="pending">waiting on Gio</option>
                   <option value="first-only">first location only</option>
                   <option value="include-home">include home location</option>
@@ -652,30 +652,30 @@ export function SwipeDeck({
 
             <label className="flex items-center justify-between gap-2">
               <span className="text-muted">Daily goal (swipes)</span>
-              <input type="number" min={10} max={2000} defaultValue={settings.dailyGoal} onBlur={(e) => changeSettings({ dailyGoal: Number(e.target.value) })} className="w-24 rounded border border-border bg-surface-raised px-2 py-1 text-right text-foreground" />
+              <input type="number" min={10} max={2000} defaultValue={settings.dailyGoal} onBlur={(e) => changeSettings({ dailyGoal: Number(e.target.value) })} className="w-24 rounded-xl border border-border bg-surface-raised px-2 py-1 text-right text-foreground" />
             </label>
 
             <div>
-              <p className="mb-1 font-mono text-[11px] tracking-wider text-muted uppercase">Auto-label confident events</p>
+              <p className="mb-1 text-xs text-muted first-letter:uppercase">Auto-label confident events</p>
               {deckInfo.basis === "model" ? (
                 <>
                   <label className="flex items-center justify-between gap-2">
                     <span className="text-muted">Threshold</span>
-                    <input type="number" step={0.01} min={0.5} max={0.999} defaultValue={settings.autoThreshold} onBlur={(e) => changeSettings({ autoThreshold: Number(e.target.value) })} className="w-24 rounded border border-border bg-surface-raised px-2 py-1 text-right text-foreground" />
+                    <input type="number" step={0.01} min={0.5} max={0.999} defaultValue={settings.autoThreshold} onBlur={(e) => changeSettings({ autoThreshold: Number(e.target.value) })} className="w-24 rounded-xl border border-border bg-surface-raised px-2 py-1 text-right text-foreground" />
                   </label>
                   <p className="mt-1 text-xs text-muted">
                     Unlabelled events in the current date filter that model {deckInfo.model} is at least {Math.round(settings.autoThreshold * 100)}% sure of get a machine label (never counted as human; test set untouched). A few come back as spot checks.
                   </p>
                   {autoPreview ? (
-                    <div className="mt-2 flex items-center justify-between gap-2 rounded bg-surface-raised px-3 py-2">
+                    <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-surface-raised px-3 py-2">
                       <span className="text-xs">{autoPreview.labelled} of {autoPreview.considered} would be machine-labelled.</span>
                       <span className="flex gap-2">
-                        <button type="button" disabled={autoBusy || autoPreview.labelled === 0} onClick={() => runAuto(false)} className="rounded bg-accent px-3 py-1 text-xs font-semibold text-black disabled:opacity-40">Apply</button>
-                        <button type="button" onClick={() => setAutoPreview(null)} className="rounded border border-border px-3 py-1 text-xs">Cancel</button>
+                        <button type="button" disabled={autoBusy || autoPreview.labelled === 0} onClick={() => runAuto(false)} className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-black disabled:opacity-40">Apply</button>
+                        <button type="button" onClick={() => setAutoPreview(null)} className="rounded-xl border border-border px-3 py-1 text-xs">Cancel</button>
                       </span>
                     </div>
                   ) : (
-                    <button type="button" disabled={autoBusy} onClick={() => runAuto(true)} className="mt-2 rounded border border-border px-3 py-1.5 text-xs disabled:opacity-40">
+                    <button type="button" disabled={autoBusy} onClick={() => runAuto(true)} className="mt-2 rounded-xl border border-border px-3 py-1.5 text-xs disabled:opacity-40">
                       {autoBusy ? "Checking…" : "Preview auto-label"}
                     </button>
                   )}
@@ -687,7 +687,7 @@ export function SwipeDeck({
               )}
             </div>
 
-            <p className="font-mono text-[10px] leading-relaxed text-muted">
+            <p className="text-xs leading-relaxed text-muted">
               Order: {deckInfo.basis === "model" ? `model ${deckInfo.model} uncertainty` : "dwell heuristic"} · {Math.round(settings.randomShare * 100)}% random calibration (guess hidden) · {deckInfo.total} events in deck · {deckInfo.testHeld} test-set events held out ·{" "}
               {deckInfo.provenance ? "node records swipe provenance" : "node does not record provenance yet; the console ledger does"} · reviewer {reviewer}
             </p>

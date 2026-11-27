@@ -50,7 +50,7 @@ export function BulkGrid({
 
   if (page.length === 0) {
     return (
-      <p className="rounded border border-border bg-surface p-8 text-center font-mono text-xs text-muted">
+      <p className="card p-8 text-center text-xs text-muted">
         Nothing left that can be bulk-confirmed. Events with a hint are
         reviewed one at a time.
       </p>
@@ -64,9 +64,9 @@ export function BulkGrid({
   const ready = armed && allSeen && chosen.length > 0;
 
   return (
-    <section className="rounded border border-border bg-surface p-4">
+    <section className="card p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="font-mono text-[11px] text-muted">
+        <p className="text-xs text-muted">
           Look at each picture. Untick any that are not plainly routine, or
           whose class is wrong. Those stay unlabelled.
         </p>
@@ -74,7 +74,7 @@ export function BulkGrid({
           type="button"
           disabled={!ready}
           onClick={() => onConfirm(chosen)}
-          className="rounded bg-accent px-4 py-2 font-mono text-xs font-semibold tracking-[0.15em] text-background uppercase transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-background first-letter:uppercase transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
           {ready
             ? `Confirm ${chosen.length} as routine`
@@ -90,7 +90,7 @@ export function BulkGrid({
           return (
             <li key={item.n}>
               <label
-                className={`block cursor-pointer overflow-hidden rounded border p-1 transition-colors ${
+                className={`block cursor-pointer overflow-hidden rounded-xl border p-1 transition-colors ${
                   isOut ? "border-border opacity-40" : "border-accent/50"
                 }`}
               >
@@ -101,7 +101,7 @@ export function BulkGrid({
                   onSeen={() => setSeen((old) => new Set(old).add(item.n))}
                   onFailed={() => setFailed((old) => new Set(old).add(item.n))}
                 />
-                <span className="flex items-center justify-between gap-2 px-1 pt-1 font-mono text-[11px] text-foreground">
+                <span className="flex items-center justify-between gap-2 px-1 pt-1 text-xs text-foreground">
                   <span>
                     {item.features.class}{" "}
                     <span className="text-muted">#{item.n}</span>

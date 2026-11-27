@@ -2,7 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import type { NodeConfig } from "@/lib/nodes";
-import { findNode, sessionCookieName } from "@/lib/nodeSessions";
+import { findNode } from "@/lib/nodeSessions";
+import { nodeToken } from "@/lib/session";
 import { selectedNode } from "@/lib/selectedNode";
 import { answers } from "@/lib/discovery/scan";
 
@@ -58,7 +59,7 @@ const POST_ALLOWED = [
 export const dynamic = "force-dynamic";
 
 async function bearer(node: NodeConfig): Promise<string | null> {
-  return (await cookies()).get(sessionCookieName(node.id))?.value ?? null;
+  return nodeToken(await cookies(), node.id);
 }
 
 /** The node this request is for; null when it names an unknown id. */

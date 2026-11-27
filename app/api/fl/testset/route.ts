@@ -9,7 +9,8 @@ import {
   writeHistory,
 } from "@/lib/fl/store";
 import type { SampleStats } from "@/lib/fl/types";
-import { findNode, sessionCookieName } from "@/lib/nodeSessions";
+import { findNode } from "@/lib/nodeSessions";
+import { nodeToken } from "@/lib/session";
 
 // Freeze a node's held-back test set and score its live head on it. Both
 // are console-side: the only node traffic is GET /api/status and /api/events.
@@ -28,8 +29,7 @@ export async function POST(request: NextRequest) {
   const node = findNode(body?.node ?? "");
   if (!node) return NextResponse.json({ error: "Unknown node" }, { status: 404 });
 
-  const jar = await cookies();
-  const token = jar.get(sessionCookieName(node.id))?.value ?? null;
+  const token = nodeToken(await cookies(), node.id);
   if (!token) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }

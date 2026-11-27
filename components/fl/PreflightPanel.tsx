@@ -13,10 +13,10 @@ export function PreflightPanel({ data }: { data: PreflightResponse }) {
   const { server } = data;
 
   return (
-    <section className="rounded border border-border bg-surface p-4 font-mono text-xs">
+    <section className="card p-4 text-xs">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-sans text-sm font-medium text-foreground">Pre-flight</h2>
-        <p className="text-[11px] text-muted">
+        <p className="text-xs text-muted">
           Read {formatEpoch(data.checkedAt)}. This panel starts nothing.
         </p>
       </div>
@@ -125,7 +125,7 @@ export function PreflightPanel({ data }: { data: PreflightResponse }) {
           <dd className="text-foreground">{server.flwrHandChecked}</dd>
         </div>
       </dl>
-      <p className="mt-1 text-[11px] text-muted">
+      <p className="mt-1 text-xs text-muted">
         Clients only connect once a round is triggered, so 0 is normal before
         that. The server&apos;s own connected count stays 0 until a round ends.
         No API reports flwr, so those are hand-checked values.
@@ -151,11 +151,11 @@ export function PreflightPanel({ data }: { data: PreflightResponse }) {
 
 export function DetectorQualityPanel({ data }: { data: PreflightResponse }) {
   return (
-    <section className="rounded border border-border bg-surface p-4 font-mono text-xs">
+    <section className="card p-4 text-xs">
       <h2 className="font-sans text-sm font-medium text-foreground">
         Detector class, as confirmed by the operator
       </h2>
-      <p className="mt-1 text-[11px] leading-relaxed text-muted">
+      <p className="mt-1 text-xs leading-relaxed text-muted">
         YOLO is not federated, so rounds cannot change these. This is how often
         a person agreed with the detector&apos;s class on events they labelled
         routine. It covers only those events and misses anything YOLO never
