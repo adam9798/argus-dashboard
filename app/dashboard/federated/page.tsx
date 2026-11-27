@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { DashboardNav } from "@/components/DashboardNav";
 import { PreflightPanel, DetectorQualityPanel } from "@/components/fl/PreflightPanel";
 import { RunHistory } from "@/components/fl/RunHistory";
+import { ModelHistory } from "@/components/fl/ModelHistory";
+import { isUnverified } from "@/lib/fl/merge";
 import { TrendChart, type TrendSeries } from "@/components/fl/TrendChart";
 import { useAuth } from "@/hooks/useAuth";
 import { AMBER } from "@/lib/format";
@@ -141,7 +143,10 @@ export default function FederatedPage() {
     return nodes.map((node) => {
       const entries = runs.flatMap((run) =>
         run.nodes
-          .filter((item) => item.nodeId === node.id && item.result?.candidate)
+          .filter(
+            (item) =>
+              item.nodeId === node.id && item.result?.candidate && !isUnverified(item),
+          )
           .map((item) => ({ run, item })),
       );
       const xLabels = entries.map((_, index) => `Run ${index + 1}`);
@@ -336,14 +341,16 @@ export default function FederatedPage() {
         </div>
       )}
 
+      {history && <ModelHistory history={history} saver={historyData?.saver ?? []} />}
+
       {history && <RunHistory history={history} />}
 
       {preflight && <DetectorQualityPanel data={preflight} />}
 
       <p className="text-xs text-muted">
         {historyData ? `History is saved in ${historyData.dataDir}. ` : ""}
-        Keep this page open during a round so each result is copied there as
-        soon as it appears.
+        Rounds are copied there as they happen, while the dashboard is
+        running.
         {noRounds ? " No live round yet." : ""}
       </p>
     </div>

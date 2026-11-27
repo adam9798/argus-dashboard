@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { configuredNodes, type NodeConfig } from "@/lib/nodes";
+import { configuredNodes, trustedNodeIds, type NodeConfig } from "@/lib/nodes";
 import { nodeToken } from "@/lib/session";
 import {
   latestNotes,
@@ -8,15 +8,20 @@ import {
   serialized,
   writeHistory,
 } from "@/lib/fl/store";
+import {
+  addRun,
+  JOIN_WINDOW_S,
+  markInterrupted,
+  parseLog,
+  saveNodeRun,
+} from "@/lib/fl/merge";
 import type {
-  FitLog,
   FlowerConfig,
   GateResult,
-  GlobalLog,
   HistoryFile,
+  ModelVersion,
   NodeRun,
   OperatorNote,
-  RunRecord,
   SamplesResponse,
   SampleStats,
   ServerRound,
@@ -95,128 +100,43 @@ interface EventRow {
 
 type RawServerRound = Omit<ServerRound, "key">;
 
-const JOIN_WINDOW_S = 10 * 60;
 const ROUND_WINDOW_S = 40 * 60;
 
-function runIdFor(startedSeconds: number): string {
-  const iso = new Date(startedSeconds * 1000).toISOString();
-  return `run-${iso.slice(0, 19).replace(/[-:]/g, "").replace("T", "-")}`;
-}
-
-function parseLog(log: string[]) {
-  const fits: FitLog[] = [];
-  const globals: GlobalLog[] = [];
-  let trainSamples: number | undefined;
-  let valSamples: number | undefined;
-  let humanOnly: boolean | undefined;
-  let labelsReviewed: number | undefined;
-  let labelsMachine: number | undefined;
-  for (const line of log) {
-    if (!line.startsWith("{")) continue;
-    try {
-      const entry = JSON.parse(line);
-      if (entry.kind === "ready") {
-        trainSamples = entry.train;
-        valSamples = entry.val;
-        humanOnly = entry.human_only;
-        labelsReviewed = entry.labels_reviewed;
-        labelsMachine = entry.labels_machine;
-      } else if (entry.kind === "fit") fits.push(entry);
-      else if (entry.kind === "global") globals.push(entry);
-    } catch {
-      // Flower's own log lines are mixed in; only ours are JSON.
-    }
-  }
-  return {
-    fits,
-    globals,
-    trainSamples,
-    valSamples,
-    humanOnly,
-    labelsReviewed,
-    labelsMachine,
-  };
-}
-
-function runContaining(history: HistoryFile, seconds: number, window: number) {
-  return history.runs.find((run) => Math.abs(run.startedAt - seconds) <= window);
-}
-
-function ensureRun(history: HistoryFile, started: number): RunRecord {
-  const found = runContaining(history, started, JOIN_WINDOW_S);
-  if (found) return found;
-  const run: RunRecord = {
-    id: runIdFor(started),
-    startedAt: started,
-    nodes: [],
-    serverRounds: [],
-  };
-  history.runs.push(run);
-  history.runs.sort((a, b) => a.startedAt - b.startedAt);
-  return run;
-}
-
-/** Comparable form of a record, whatever order its keys were set in. */
-function canonical(run: NodeRun): string {
-  return JSON.stringify(
-    Object.entries({ ...run, capturedAt: 0 })
-      .filter(([, value]) => value !== undefined)
-      .sort(([a], [b]) => a.localeCompare(b)),
-  );
-}
-
-/** Copy one node's latest round. Returns true if the file should be saved. */
-function mergeNode(
-  history: HistoryFile,
+/** One node's latest round as a history record; null when it reports none. */
+function toNodeRun(
   node: NodeConfig,
   round: NodeRoundStatus,
   head: NodeHead | undefined,
   status: NodeStatus | undefined,
-): boolean {
-  if (!round.started || !round.run_dir) return false;
-  const started = round.started;
-  const run = ensureRun(history, started);
-  const existing = run.nodes.find(
-    (item) => item.nodeId === node.id && item.runDir === round.run_dir,
-  );
+): NodeRun | null {
+  if (!round.started || !round.run_dir) return null;
 
-  // The node forgets `result` if it restarts mid-run; the last decision on
-  // disk survives, so it stands in when it is plainly from this round.
+  // The node forgets `result` if it restarts; the last decision on its disk
+  // survives, and stands in only when it is plainly about this round.
   const decision = head?.model.last_decision;
-  const result =
-    round.result ??
-    (decision?.at && decision.at >= started ? decision : null) ??
-    existing?.result ??
-    null;
+  const aboutThis = decision?.run_dir
+    ? decision.run_dir === round.run_dir
+    : Boolean(decision?.at && decision.at >= round.started);
 
   const parsed = parseLog(round.log);
-  const next: NodeRun = {
+  return {
     nodeId: node.id,
     nodeName: node.name,
-    reportedName: status?.node ?? existing?.reportedName,
-    started,
+    reportedName: status?.node,
+    started: round.started,
     runDir: round.run_dir,
     running: round.running,
     exitCode: round.exit_code,
-    trainSamples: parsed.trainSamples ?? existing?.trainSamples,
-    valSamples: parsed.valSamples ?? existing?.valSamples,
-    humanOnly: parsed.humanOnly ?? round.human_only ?? existing?.humanOnly,
-    labelsReviewed: parsed.labelsReviewed ?? existing?.labelsReviewed,
-    labelsMachine: parsed.labelsMachine ?? existing?.labelsMachine,
-    fits: parsed.fits.length ? parsed.fits : (existing?.fits ?? []),
-    globals: parsed.globals.length ? parsed.globals : (existing?.globals ?? []),
-    result,
-    syntheticRows: existing?.syntheticRows,
-    capturedAt: existing?.capturedAt ?? Date.now() / 1000,
+    trainSamples: parsed.trainSamples,
+    valSamples: parsed.valSamples,
+    humanOnly: parsed.humanOnly ?? round.human_only,
+    labelsReviewed: parsed.labelsReviewed,
+    labelsMachine: parsed.labelsMachine,
+    fits: parsed.fits,
+    globals: parsed.globals,
+    result: round.result ?? (aboutThis ? (decision ?? null) : null),
+    capturedAt: Date.now() / 1000,
   };
-
-  if (existing) {
-    if (canonical(existing) === canonical(next)) return false;
-    Object.assign(existing, next);
-    return true;
-  }
-  run.nodes.push(next);
-  return true;
 }
 
 function mergeServerRounds(
@@ -241,7 +161,9 @@ function mergeServerRounds(
         (item) =>
           finished >= item.startedAt - 60 &&
           finished <= item.startedAt + ROUND_WINDOW_S,
-      ) ?? ensureRun(history, started);
+      ) ??
+      history.runs.find((item) => Math.abs(item.startedAt - started) <= JOIN_WINDOW_S) ??
+      addRun(history, started);
     run.serverRounds.push({ ...raw, key });
     run.serverRounds.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
     if (config && !run.serverConfig) run.serverConfig = config;
@@ -281,6 +203,11 @@ export async function measureNode(
     return `${node.name}: could not read events (${events.error})`;
   }
 
+  const newest = Math.max(0, ...events.data.map((event) => event.id));
+  if (items.some((item) => item.n > newest)) {
+    return `${node.name}: the test set no longer matches its events (was it reflashed?)`;
+  }
+
   const byId = new Map(events.data.map((event) => [event.id, event]));
   const measurement: TestMeasurement = {
     node: node.id,
@@ -316,12 +243,20 @@ export async function measureNode(
   return measurement;
 }
 
-/** Pull everything new and save it. Safe to call on every page poll. */
-export async function capture(): Promise<{
-  history: HistoryFile;
-  errors: string[];
-}> {
-  const tokens = await nodeTokens();
+/**
+ * Pull everything new and save it. Safe to call on every page poll and from the
+ * background saver. `only` limits it to some nodes.
+ */
+export async function capture(
+  tokens: Map<string, string | null>,
+  only?: string[],
+): Promise<{ history: HistoryFile; errors: string[] }> {
+  // A machine that discovery picked up, but the owner never listed, must not
+  // write into the history.
+  const trusted = new Set(trustedNodeIds());
+  const nodes = configuredNodes().filter(
+    (node) => trusted.has(node.id) && (!only || only.includes(node.id)),
+  );
 
   return serialized(async () => {
     const history = await readHistory();
@@ -339,9 +274,9 @@ export async function capture(): Promise<{
     if (!flower.ok) errors.push(`Flower server: ${flower.error}`);
 
     await Promise.all(
-      configuredNodes().map(async (node) => {
+      nodes.map(async (node) => {
         const token = tokens.get(node.id) ?? null;
-        const [round, head, status] = await Promise.all([
+        const [round, head, status, versions] = await Promise.all([
           getJson<NodeRoundStatus>(
             `${node.baseUrl}/api/federated/round`,
             token,
@@ -349,15 +284,27 @@ export async function capture(): Promise<{
           ),
           getJson<NodeHead>(`${node.baseUrl}/api/federated/head`, token, 6_000),
           getJson<NodeStatus>(`${node.baseUrl}/api/status`, token, 6_000),
+          getJson<{ versions?: ModelVersion[] }>(
+            `${node.baseUrl}/api/federated/head/versions`,
+            token,
+            6_000,
+          ),
         ]);
+
+        // The accepted models survive a node restart, unlike the round above.
+        const list = versions.data?.versions;
+        if (list && JSON.stringify(history.versions?.[node.id]) !== JSON.stringify(list)) {
+          history.versions = { ...history.versions, [node.id]: list };
+          changed = true;
+        }
 
         if (!round.ok || !round.data) {
           errors.push(`${node.name}: ${round.error}`);
           return;
         }
-        if (mergeNode(history, node, round.data, head.data, status.data)) {
-          changed = true;
-        }
+        if (markInterrupted(history, node.id, round.data.run_dir)) changed = true;
+        const latest = toNodeRun(node, round.data, head.data, status.data);
+        if (latest && saveNodeRun(history, latest)) changed = true;
 
         // Training does not filter synthetic rows, so a finished run records
         // whether the node had any. Real-data views then leave it out.
@@ -391,7 +338,25 @@ export async function capture(): Promise<{
         // so a round's result cannot go unmeasured.
         const frozen = history.testSets[node.id]?.frozenAt;
         const version = status.data?.model_version;
+        // A node that was reflashed counts its events from 1 again, so the
+        // frozen set now names events it does not have.
+        let stale = false;
+        if (frozen) {
+          const newest = await getJson<EventRow[]>(
+            `${node.baseUrl}/api/events?limit=1`,
+            token,
+            6_000,
+          );
+          const highest = Math.max(0, ...testItems(await readNotes(node.id)).map((item) => item.n));
+          stale = Boolean(newest.data) && highest > (newest.data?.[0]?.id ?? 0);
+          if (stale) {
+            errors.push(
+              `${node.name}: its frozen test set no longer matches its events (was it reflashed?). Not measured.`,
+            );
+          }
+        }
         if (
+          !stale &&
           frozen &&
           version &&
           !round.data.running &&

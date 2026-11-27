@@ -21,37 +21,77 @@ const notesPath = () => path.join(dataDir(), "operator-notes.jsonl");
 
 const EMPTY: HistoryFile = { version: 1, runs: [], measurements: [], testSets: {} };
 
-/** One writer at a time within this server process. */
-let tail: Promise<unknown> = Promise.resolve();
+/**
+ * One writer at a time within this server process. Held on globalThis: the
+ * background saver and the API routes can load separate copies of this module,
+ * and two locks would let one save overwrite the other.
+ */
+const shared = globalThis as unknown as { __argusFlTail?: Promise<unknown> };
 export function serialized<T>(work: () => Promise<T>): Promise<T> {
-  const next = tail.then(work, work);
-  tail = next.catch(() => undefined);
+  const next = (shared.__argusFlTail ?? Promise.resolve()).then(work, work);
+  shared.__argusFlTail = next.catch(() => undefined);
   return next;
 }
 
-/**
- * A file that exists but cannot be parsed throws rather than reading as
- * empty. Reading it as empty would overwrite the history on the next save.
- */
-export async function readHistory(): Promise<HistoryFile> {
+/** The history in a file; null if it is missing. Throws if it is damaged. */
+async function parseHistory(file: string): Promise<HistoryFile | null> {
   let raw: string;
   try {
-    raw = await fs.readFile(historyPath(), "utf8");
+    raw = await fs.readFile(file, "utf8");
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      return structuredClone(EMPTY);
-    }
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw err;
   }
-  return { ...structuredClone(EMPTY), ...(JSON.parse(raw) as HistoryFile) };
+  const parsed = JSON.parse(raw) as HistoryFile;
+  if (!Array.isArray(parsed?.runs)) throw new Error("not a history file");
+  return { ...structuredClone(EMPTY), ...parsed };
 }
+
+/**
+ * A damaged or vanished file falls back to the previous save. If neither can
+ * be read this throws rather than reading as empty: reading it as empty would
+ * overwrite the history on the next save.
+ */
+export async function readHistory(): Promise<HistoryFile> {
+  const target = historyPath();
+  let damaged: unknown;
+  try {
+    const current = await parseHistory(target);
+    if (current) return current;
+  } catch (err) {
+    damaged = err;
+  }
+
+  const backup = await parseHistory(`${target}.bak`).catch(() => null);
+  if (backup) {
+    // Set the damaged file aside, so it is kept and never copied over .bak.
+    if (damaged) {
+      await fs.rename(target, `${target}.damaged-${Date.now()}`).catch(() => undefined);
+    }
+    return backup;
+  }
+  if (damaged) throw damaged;
+  return structuredClone(EMPTY);
+}
+
+let writes = 0;
 
 export async function writeHistory(history: HistoryFile): Promise<void> {
   await fs.mkdir(dataDir(), { recursive: true });
   const target = historyPath();
-  const temp = `${target}.tmp`;
-  await fs.writeFile(temp, JSON.stringify(history, null, 2), "utf8");
-  await fs.copyFile(target, `${target}.bak`).catch(() => undefined);
+  const temp = `${target}.${process.pid}-${++writes}.tmp`;
+  const handle = await fs.open(temp, "w");
+  try {
+    await handle.writeFile(JSON.stringify(history, null, 2), "utf8");
+    // On disk before it replaces anything: a crash must not leave zeros.
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  // Only a readable file may become the backup.
+  if (await parseHistory(target).catch(() => null)) {
+    await fs.copyFile(target, `${target}.bak`);
+  }
   await fs.rename(temp, target);
 }
 

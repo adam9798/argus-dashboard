@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 import { formatEpoch } from "@/lib/format";
 import { pct } from "@/lib/fl/stats";
+import { isUnverified, roundState } from "@/lib/fl/merge";
 import type { HistoryFile, NodeRun, RunRecord, TestMeasurement } from "@/lib/fl/types";
 
 const TH = "py-1.5 pr-4 font-normal text-muted whitespace-nowrap";
@@ -24,10 +25,17 @@ function roundsOf(run: RunRecord): string {
 }
 
 function gateText(node: NodeRun): string {
-  if (node.running) return "Running";
-  if (!node.result) return "No result";
-  if (node.result.accepted) return `Accepted${node.result.label ? ` as ${node.result.label}` : ""}`;
-  return "Rejected";
+  const state = roundState(node);
+  if (state === "accepted") {
+    return `Accepted${node.result?.label ? ` as ${node.result.label}` : ""}`;
+  }
+  return {
+    running: "Running",
+    deciding: "Awaiting decision",
+    rejected: "Rejected",
+    incomplete: "Incomplete",
+    interrupted: "Interrupted",
+  }[state];
 }
 
 function fixed(value: number | null | undefined): string {
@@ -48,6 +56,8 @@ export function RunHistory({ history }: { history: HistoryFile }) {
       <p className="mt-1 text-xs leading-relaxed text-muted">
         Only rounds that ran on the Pis. Simulation runs are not listed, and a
         run with synthetic rows on any node is marked and left out of the trends.
+        An unverified round did not record what it trained on, so it is listed
+        but not charted.
       </p>
 
       {runs.length === 0 ? (
@@ -77,6 +87,11 @@ export function RunHistory({ history }: { history: HistoryFile }) {
                         {run.id}
                         {usesSynthetic(run) && (
                           <span className="ml-2 text-danger">synthetic, excluded</span>
+                        )}
+                        {run.nodes.some(isUnverified) && (
+                          <span className="ml-2 rounded-full bg-surface-raised px-2 py-0.5 text-muted">
+                            unverified
+                          </span>
                         )}
                       </td>
                       <td className={TD}>{formatEpoch(run.startedAt)}</td>

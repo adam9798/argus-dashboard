@@ -7,4 +7,6 @@ export async function register() {
   startDiscovery();
   const { startAlertWatcher } = await import("@/lib/alerts/watcher");
   startAlertWatcher();
+  const { startRoundSaver } = await import("@/lib/fl/saver");
+  startRoundSaver();
 }

@@ -2,6 +2,7 @@ import type { DetectionEvent } from "@/lib/api";
 import { configuredNodes, type NodeConfig } from "@/lib/nodes";
 import { formatAlert, formatTest, dashboardLink } from "@/lib/alerts/format";
 import { deliver, webhookUrl } from "@/lib/alerts/discord";
+import { cachedToken, forgetToken, serviceToken } from "@/lib/nodeAuth";
 import {
   appendDeadLetter,
   readState,
@@ -37,8 +38,6 @@ interface Runtime {
   started: boolean;
   state: AlertState | null;
   health: Record<string, NodeHealth>;
-  tokens: Record<string, string>;
-  logins: Record<string, { at: number; fails: number }>;
   lastTestAt: number;
 }
 
@@ -48,8 +47,6 @@ const runtime: Runtime = (globalForAlerts.__argusAlerts ??= {
   started: false,
   state: null,
   health: {},
-  tokens: {},
-  logins: {},
   lastTestAt: 0,
 });
 
@@ -65,49 +62,6 @@ function persist(state: AlertState): Promise<void> {
 
 // ---- node access -------------------------------------------------------
 
-const LOGIN_GAP_MS = 5 * 60 * 1000;
-const LOGIN_MAX_FAILS = 3;
-
-/**
- * Only used when a node refuses unauthenticated reads. A node locks logins
- * after repeated failures, so this tries rarely and gives up after a few
- * failures until the dashboard restarts.
- */
-async function serviceToken(node: NodeConfig): Promise<string | null> {
-  const user = process.env.ARGUS_ALERT_USER;
-  const pass = process.env.ARGUS_ALERT_PASS;
-  if (!user || !pass) return null;
-  if (runtime.tokens[node.id]) return runtime.tokens[node.id];
-
-  const tries = (runtime.logins[node.id] ??= { at: 0, fails: 0 });
-  if (tries.fails >= LOGIN_MAX_FAILS) return null;
-  if (Date.now() - tries.at < LOGIN_GAP_MS) return null;
-  tries.at = Date.now();
-
-  try {
-    const res = await fetch(`${node.baseUrl}/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: user, password: pass }),
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!res.ok) {
-      tries.fails += 1;
-      return null;
-    }
-    const data = (await res.json()) as { access_token?: string };
-    if (!data.access_token) {
-      tries.fails += 1;
-      return null;
-    }
-    tries.fails = 0;
-    runtime.tokens[node.id] = data.access_token;
-    return data.access_token;
-  } catch {
-    return null;
-  }
-}
-
 async function fetchEvents(node: NodeConfig): Promise<DetectionEvent[]> {
   const call = (token?: string) =>
     fetch(`${node.baseUrl}/api/events`, {
@@ -116,9 +70,9 @@ async function fetchEvents(node: NodeConfig): Promise<DetectionEvent[]> {
       cache: "no-store",
     });
 
-  let res = await call(runtime.tokens[node.id]);
+  let res = await call(cachedToken(node) ?? undefined);
   if (res.status === 401) {
-    delete runtime.tokens[node.id];
+    forgetToken(node);
     const token = await serviceToken(node);
     if (!token) throw new Error("node needs a sign-in (set ARGUS_ALERT_USER and ARGUS_ALERT_PASS)");
     res = await call(token);

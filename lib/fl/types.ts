@@ -210,7 +210,33 @@ export interface NodeRun {
   globals: GlobalLog[];
   result: GateResult | null;
   syntheticRows?: number;
+  /** Cut off before a decision, as far as the node can still say. */
+  interrupted?: boolean;
+  /** Copied from the node's files afterwards, not seen live. */
+  imported?: boolean;
   capturedAt: number;
+}
+
+/** One accepted model on a node (GET /api/federated/head/versions). */
+export interface ModelVersion {
+  label: string;
+  version: number;
+  source?: string;
+  at?: number;
+  balanced_accuracy?: number;
+  loss?: number;
+  restored_from?: string | null;
+  live: boolean;
+}
+
+/** What the background saver last learned about one node. */
+export interface SaverStatus {
+  nodeId: string;
+  name: string;
+  /** Epoch seconds of the last successful check; null if never. */
+  checkedAt: number | null;
+  state: "checking" | "ok" | "offline" | "signin" | "error";
+  detail?: string;
 }
 
 export interface ClientResult {
@@ -292,6 +318,8 @@ export interface HistoryFile {
   runs: RunRecord[];
   measurements: TestMeasurement[];
   testSets: Record<string, TestSetState>;
+  /** Accepted models per node, kept so they show with the node switched off. */
+  versions?: Record<string, ModelVersion[]>;
 }
 
 // --- Pre-flight ---
@@ -373,4 +401,5 @@ export interface HistoryResponse {
   history: HistoryFile;
   dataDir: string;
   errors: string[];
+  saver: SaverStatus[];
 }

@@ -1,226 +1,194 @@
-# ARGUS Dashboard
+<div align="center">
 
-Frontend for **ARGUS**, a two-node, privacy-preserving AI home security
-system (senior design). Each camera is a Raspberry Pi 5 node doing
-on-device detection and face recognition; nodes personalize a shared
-model via federated learning. No video, face crop, or embedding ever
-leaves the property — this dashboard only ever sees the derived event
-data (class, zone, confidence, labels), never raw footage.
+# 👁️ ARGUS Console
 
-This repo is the **dashboard, alerting, and event-labeling UI** only —
-not the detection pipeline, not federated learning, and not the
-backend/API/database (see [Backend contract](#backend-contract) for
-what this frontend expects from that backend).
+**The dashboard for ARGUS, a distributed AI home security system built on Raspberry Pi camera nodes.**
 
-## Stack
+Watch every camera, review what the AI flags, teach it, and follow its federated training,
+from a computer or a phone on your own network.
 
-Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white)
+![Raspberry Pi](https://img.shields.io/badge/Raspberry_Pi-5-A22846?logo=raspberrypi&logoColor=white)
 
-## What's here
+<img src="docs/screenshots/overview.png" alt="Overview: summary cards, live cameras and node temperatures" width="100%">
 
-- **Auth** — login form → JWT issued by the backend → stored as an
-  **HttpOnly cookie** (never touches client-side JS or `localStorage`).
-  A route guard (`proxy.ts`) reads the cookie server-side to gate
-  `/dashboard`.
-- **Side-by-side console** (`/dashboard`) — every node in `ARGUS_NODES`
-  on one screen, and the landing page after login. Each panel fetches
-  and fails on its own and shows:
-  - the node's MJPEG camera stream;
-  - **status**: FPS, accelerator, model version and SoC temperature,
-    with connecting / online / offline / sign-in-needed states;
-  - **recent events**, flagging `stranger` detections in red. Clicking
-    one opens the shared detail panel as an overlay, with **Confirm** /
-    **Correct** wired to `POST /api/events/{id}/label` on that node, and
-    "Back to live view" (or Esc) closes it while the streams keep running.
-- **Per-node sessions** — each node issues its own tokens, so the
-  browser holds one HttpOnly cookie per node (`argus_session_<node id>`).
-  The login page signs in to the picked node; a panel without a session
-  shows its own sign-in form for that node. A password is only sent to
-  the node named on the form and is never stored. The single-node pages
-  need a session on the picked node.
-- **Live feed** (`/dashboard/live`) — the node's MJPEG camera stream
-  (`GET /api/camera/stream`) beside the last few detections, so you can
-  watch a detection happen and label it in the same view. The camera
-  panel has its own connecting / streaming / no-signal states and a
-  retry, since the stream fails independently of the rest of the page.
-- **Alerts feed** (`/dashboard/alerts`) — only what the node flagged
-  (`status: "stranger"`, the head's "unusual for this site" call).
-  Unreviewed alerts sort above reviewed ones whatever their timestamp,
-  with the event's stored still (`GET /api/events/{id}/snapshot`) when
-  the node kept one, and the same Confirm / Correct actions. A badge in
-  the nav carries the unreviewed count across all three pages.
-- **Live push** — `connectEventsSocket()` is now actually called (see
-  `hooks/useEventFeed.ts`): events arrive on `WS /ws/events`, and a
-  socket that never opens or dies falls back to polling `/api/events`
-  every 5s. The mode badge says which is in effect — "live push" is
-  never shown for a poll.
-- **Authenticated proxy** (`app/api/argus/[...path]/route.ts`) — the JWT
-  is an HttpOnly cookie on the *dashboard's* origin, so a client-side
-  fetch to the node can't carry it, and every real route sits behind
-  `require_auth`. Browser calls go to `/api/argus/<suffix>` on this
-  origin; the route reads that node's cookie server-side and adds
-  `Authorization: Bearer` on the way out. `?node=<id>` picks the node
-  (an id from `ARGUS_NODES`, never a URL); without it, the node picked
-  in the nav is used. Allowlisted paths only —
-  status, events, labels, event stills, camera stream/snapshot — and
-  it's what makes an `<img>` able to show an authenticated MJPEG stream
-  at all.
-- **Label events** (`/dashboard/label`) — per-node queue of unlabelled real
-  events with their stills. Routine or Anomaly in one tap or key (R, A, 1 to
-  4 for the class, S skip, X no object, U undo), plus a bulk view that only
-  arms once every picture has rendered. A label waits 6 s on the console
-  before it goes to the node, because the node cannot clear one. Labels
-  are sent as `correct` with an exact label name, and the node's reply is
-  checked. A separate **test set** stays on the console, is never sent to
-  the node, and is frozen to measure each model.
-- **Federated** (`/dashboard/federated`) — pre-flight read of real state,
-  whether things are improving on the frozen test set, per-node gate
-  charts, run history. Starts nothing: the proxy allowlist contains no
-  round or bootstrap route.
-- **Federated history on disk** — `data/federated/history.json` and
-  `operator-notes.jsonl` (gitignored; `ARGUS_FL_DATA_DIR` moves them).
-  The aggregator and the nodes do not keep this, so leave the Federated
-  page open during a round. Flower's REST address is
-  `ARGUS_FLOWER_API`, default `http://localhost:8090`.
-- **Design system** — dark, deliberately non-adaptive theme (see
-  `app/globals.css`): near-black background, monospace for
-  timestamps/data, a single teal accent reserved for "live" status,
-  red reserved for actual security alerts (stranger events, offline
-  state) — not used as decoration.
-- **A throwaway mock backend** (`scripts/mock-backend.js`) so the whole
-  app runs before Mohammed's real FastAPI backend exists. It is
-  **not** the real backend — no persistence, hardcoded sample events,
-  accepts any username/password.
+</div>
 
-## Getting started
+---
 
-```bash
-npm install
-cp .env.local.example .env.local   # adjust if your backend isn't on :8000
+## ✨ Features
+
+| | |
+|---|---|
+| 🎥 **Every camera on one screen** | Live video, FPS, accelerator, model version and temperature per node, with an **Enlarge** view |
+| 🚨 **Alerts** | Only what a node judged unusual, with confirm and correct |
+| 💬 **Discord alerts** | Sent by the server with no browser open. **Text only**: no pictures or video |
+| 🔎 **Finds the nodes itself** | Searches the local network and matches each node by name, so new networks need no editing |
+| 🧠 **Federated learning** | Rounds are saved automatically, with run history, validation charts and accepted models |
+| 🏷️ **Labeling** | A review queue, a phone swipe game and a staging mode for acted-out events |
+| 🌡️ **Thermal** | Temperature, throttling and fan history, with CSV export |
+| 🔐 **Sign-in** | Checked by the node, then kept in a signed cookie that cannot be forged |
+| 📱 **Phone ready** | Bottom navigation bar and layouts made for small screens |
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/federated.png" alt="Federated learning: validation gate, accepted models and run history"><br><sub><b>Federated learning</b></sub></td>
+    <td width="50%"><img src="docs/screenshots/thermal.png" alt="Thermal monitoring"><br><sub><b>Thermal monitoring</b></sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/screenshots/login.png" alt="Sign-in screen" width="70%"><br><sub><b>Sign in</b></sub></td>
+  </tr>
+</table>
+
+<div align="center">
+  <img src="docs/screenshots/phone-login.png" alt="Sign-in on a phone" width="30%">
+  <img src="docs/screenshots/phone-thermal.png" alt="Thermal page on a phone" width="30%">
+  <img src="docs/screenshots/phone-menu.png" alt="Phone navigation menu" width="30%">
+</div>
+
+## 🧩 How it fits together
+
+```mermaid
+flowchart LR
+    Pi["Camera nodes<br/>Raspberry Pi 5<br/>on-device detection"]
+    Server["Dashboard server<br/>Next.js on your computer"]
+    Browser["Browser<br/>computer or phone"]
+    Discord["Discord channel"]
+    Disk[("data/<br/>history and state")]
+
+    Pi -- "status, events, video" --> Server
+    Server --> Browser
+    Pi -- "live events (WebSocket)" --> Browser
+    Server -- "text-only alerts" --> Discord
+    Server <--> Disk
 ```
 
-Run the app and a backend side by side — two terminals:
+Detection runs on the nodes. The dashboard never starts a training round and never changes a model.
+
+## 🚀 Quick start
+
+**You need:** [Node.js](https://nodejs.org) **22.18 or newer**, and a computer on the **same network** as the camera nodes.
 
 ```bash
-# Terminal 1 — mock backend (skip this once the real backend exists;
-# just point NEXT_PUBLIC_API_BASE_URL at it instead)
-npm run mock-backend
-
-# Terminal 2 — the dashboard
+git clone https://github.com/adam9798/argus-dashboard.git
+cd argus-dashboard
+npm install
+cp .env.local.example .env.local     # Windows: copy .env.local.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`. Any username/password works against the
-mock backend.
+Open **http://localhost:3000** and sign in with a node's username and password.
 
-## Environment variables
+In `.env.local`:
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:8000` | Where the FastAPI backend (real or mock) lives. |
-| `ARGUS_NODES` | unset | Nodes for the nav's node picker, `Name=URL` comma separated (e.g. `Node A=http://10.0.0.140:8000,Node B=http://10.0.0.128:8000`). Server-side only: the proxy reaches a node by its id in this list, never a URL from the browser. Unset = one node at `NEXT_PUBLIC_API_BASE_URL`. |
-| `NEXT_PUBLIC_WS_EVENTS_URL` | derived from the above | Override if the WS endpoint lives somewhere else. |
-| `AUTH_COOKIE_SECURE` | `false` | Set to `true` only once the device serves HTTPS. See the comment in `lib/config.ts` — this is a deliberate LAN-vs-TLS decision, not a build-mode side effect. |
+1. Set `ARGUS_NODES` to your node names, as each node reports them (`Node A`, `Node B`, …).
+   The addresses may be out of date; the dashboard finds the real ones.
+2. For Discord alerts, add `ARGUS_DISCORD_WEBHOOK_URL`. Ask whoever runs the channel.
 
-## Backend contract
+> **Keep `.env.local` private.** It is ignored by git. Anyone with the webhook address can post to your channel.
 
-The frontend is built against this contract (FastAPI, JWT auth,
-SQLite) — implement against this shape and no frontend changes should
-be needed:
+### Production mode
 
-- `POST /api/login` → `{ access_token }` — expected to move to a
-  `Set-Cookie` response once the backend sets the HttpOnly cookie
-  itself; until then, `app/api/auth/login/route.ts` sets it on the
-  backend's behalf.
-- `GET /api/status` → `{ fps, accelerator, model_version, nodes_online }`
-- `GET /api/events` → array of event records
-- `POST /api/events/{id}/label` → `{ action: "confirm" | "correct", label? }`
-- `WS /ws/events` → live-pushed event objects, same shape as below
-- `GET /api/camera/stream` → `multipart/x-mixed-replace` MJPEG
-- `GET /api/camera/snapshot` → `image/jpeg`
-- `GET /api/events/{id}/snapshot` → `image/jpeg`, 404 when the event has
-  no stored still
+Use this for daily running and demos. It is faster, and needs a rebuild after code changes.
 
-All of these except the WS endpoint are reached through
-`/api/argus/<suffix>` rather than directly, so they carry the session
-token — see "Authenticated proxy" above.
-
-Event record:
-
-```json
-{
-  "id": 1,
-  "cls": "person",
-  "zone": "Front door",
-  "node": "Node A",
-  "ts": "2026-09-13T20:13:04Z",
-  "status": "member",
-  "label": "Household member",
-  "confidence": 97,
-  "confirmed": 0
-}
+```bash
+npm run build
+npm run start
 ```
 
-`cls`: `person | vehicle | package | animal` · `status`: `member | stranger | na`
+### Open it on a phone or another computer
 
-## Project layout
+1. Start with `npm run dev -- -H 0.0.0.0` (or `npm run start -- -H 0.0.0.0`).
+2. Browse to `http://<this-computer's-IP>:3000`.
+3. On Windows, allow the port once, in an administrator PowerShell, on a **private** network only:
+
+```powershell
+New-NetFirewallRule -DisplayName "ARGUS dashboard" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Private -RemoteAddress LocalSubnet
+```
+
+Restart the dashboard after moving to another network.
+
+## ⚙️ Settings
+
+All optional except where noted. See [`.env.local.example`](.env.local.example).
+
+| Variable | Purpose |
+|---|---|
+| `ARGUS_NODES` | `Name=URL`, comma separated. Signing in to a **listed** name opens the console |
+| `ARGUS_DISCORD_WEBHOOK_URL` | Where alerts are sent. Unset turns alerts off |
+| `ARGUS_DASHBOARD_URL` | Link used in alerts. Defaults to this computer's current address |
+| `ARGUS_ALERT_USER`, `ARGUS_ALERT_PASS` | A node sign-in for background alerts and round saving, if nodes require one |
+| `ARGUS_FLOWER_API` | The federated aggregator's REST address. Default `http://localhost:8090` |
+| `ARGUS_DISCOVERY=off` | Stops the automatic network search (the **Find nodes** button still works) |
+| `ARGUS_FL_SAVER=off` | Stops automatic saving of training rounds |
+| `ARGUS_NODE_PORT` | The nodes' API port. Default `8000` |
+| `ARGUS_SESSION_SECRET` | Cookie signing key. Made automatically if unset |
+| `AUTH_COOKIE_SECURE` | `true` only when served over HTTPS |
+| `ARGUS_FL_DATA_DIR`, `ARGUS_SWIPE_DATA_DIR`, `ARGUS_ALERTS_DATA_DIR`, `ARGUS_NODES_FILE`, `ARGUS_SESSION_SECRET_FILE` | Move saved data elsewhere |
+| `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_WS_EVENTS_URL` | Fallbacks for a single node when `ARGUS_NODES` is unset |
+
+## 💾 Your data
+
+Everything the dashboard saves is in `data/` on the computer that runs it, and is ignored by git:
+training history, swipe records, alert state, found node addresses and the signing key.
+Copy that folder to move to another computer.
+
+**One dashboard per webhook:** two running at once send every alert twice.
+
+### Import older training rounds
+
+A node reports only its latest round since it started. To bring in earlier ones:
+
+```bash
+ssh <user>@<node> 'cd argus && python3 -' < scripts/collect-fl-rounds.py > node.json
+# stop the dashboard, then:
+node scripts/import-fl-rounds.mjs node.json
+```
+
+## 🧪 Working without hardware
+
+`npm run mock-backend` starts a fake node on port 8000 that accepts any sign-in. Comment out
+`ARGUS_NODES`, set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` and `ARGUS_DISCOVERY=off`.
+It has no camera, and **its data is invented**: never present it as real.
+
+## 🗂️ Project layout
 
 ```
 app/
-  login/            login page
-  dashboard/        side-by-side console (home)
-  dashboard/live/   camera stream + recent detections
-  dashboard/alerts/ flagged events only, with stills
-  api/auth/         login/logout/session route handlers (cookie logic lives here)
-  api/argus/        server-side proxy to the node, adds the bearer token
-  page.tsx          "/" — pure auth-state redirect, not a real page
-components/
-  NodePanel.tsx     one node on the side-by-side console
-  NodeSignIn.tsx    a panel's sign-in form for its node
-  StatusStrip.tsx, EventList.tsx, EventDetailPanel.tsx, StatusDot.tsx
-  DashboardNav.tsx  shared header/nav, carries the alert count
-  LiveFeed.tsx      MJPEG panel + its own failure states
-  FeedModeBadge.tsx says whether events are pushed or polled
-  dev/TestOfflineToggle.tsx   ← see "Known gaps" below
-hooks/
-  useEventFeed.ts   WS feed with a polling fallback, shared by all pages
-  useNodeHealth.ts  one panel's status and temperature polling
+  login/              sign-in
+  dashboard/          overview, alerts, label, swipe, federated, thermal, settings
+  api/argus/          server-side proxy to the nodes (allow-listed paths only)
+  api/auth|fl|swipe|alerts|discovery/
+components/           shell, overview, node panels, labeling, federated, swipe
+hooks/                live feed, node health, node list
 lib/
-  api.ts            typed client for the backend contract above
-  AuthContext.tsx   global auth state (session status only, never the JWT)
-  config.ts         API base URL, cookie name/security flag
-  format.ts         timestamp formatting
-hooks/
-  useAuth.ts
-proxy.ts            server-side route guard (Next 16's renamed middleware)
-scripts/
-  mock-backend.js   dev-only backend stand-in, see above
+  session.ts          signed session cookies
+  discovery/          network search
+  alerts/             Discord watcher, retries, dead-letter log
+  fl/                 round saver, merge rules, history store
+  swipe/              swipe and staging records
+instrumentation.ts    starts the background services
+proxy.ts              page guard
+scripts/              mock node, round import
 ```
 
-## Known gaps / next steps
+## 🔌 What a node must provide
 
-- **WS auth is unenforced.** The node's `/ws/events` takes no token
-  today, so the live socket connects straight to the backend origin
-  rather than through the proxy. If that endpoint ever requires auth,
-  the socket needs the same server-side hop the REST calls now take.
-- **No alert notifications.** The alerts feed has to be open to be
-  seen; nothing pushes to the operator when the page is closed.
-- **`components/dev/TestOfflineToggle.tsx` is a QA aid, not a
-  feature.** It fakes the offline status-strip look without touching
-  the real connection, for visual testing. Nothing wires it in since
-  `/dashboard` became the side-by-side view; any place it's wired in
-  is marked `// TEST ONLY — remove before final build` — grep for that
-  string before shipping.
-- **HTTPS is an open decision, not solved.** `AUTH_COOKIE_SECURE`
-  defaults to `false` (LAN-only HTTP). If this ever needs to run
-  behind TLS, or if the two nodes end up exposed on separate hosts
-  instead of one shared address, the cookie/CORS setup here will need
-  revisiting — see the comment in `lib/config.ts`.
-- **Mock vs. real backend.** `scripts/mock-backend.js` answers 503 on
-  the camera endpoints — there is no fake video, so the live page shows
-  its "camera unavailable" state unless you point at a real node. It
-  keeps labels only in memory, and invents an event every 20s so the
-  polling fallback visibly does something. Swapping in the real backend is
-  just pointing `NEXT_PUBLIC_API_BASE_URL` at it — no frontend code
-  changes required as long as it matches the contract above.
+`POST /api/login` · `GET /api/status` · `GET /api/events` · `POST /api/events/{id}/label` ·
+`WS /ws/events` · `GET /api/camera/stream` · `GET /api/system/thermal[/history]` ·
+`GET /api/federated/{samples,round,head,head/versions,suggestions,scores}`
 
+## ⚠️ Good to know
+
+- The dashboard is built for a **home network over plain HTTP**. Do not expose it to the internet.
+- Its sign-in protects the dashboard. **Each camera node must be secured on its own.**
+- Node search trusts the names nodes report, so run it on networks you trust.
+- Alerts arrive within a few seconds, while the dashboard computer is on and can reach the nodes and the internet.
+- A training round that is **rejected** while the dashboard is off, followed by a node restart, is not saved automatically.
+
+See [CHANGES.md](CHANGES.md) for what changed in this version.
